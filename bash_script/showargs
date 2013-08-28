@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "$0 was called with $# arguments, the first is :$1."
+
+my_fun() {
+
+    echo "$#"
+
+}
+
+echo 'the number of parameter in "$@" is '$(my_fun "$@")
+
+echo 'the number of parameter in "$*" is '$(my_fun "$*")
+

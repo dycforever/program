@@ -1,0 +1,28 @@
+#!/bin/awk
+BEGIN{
+	i=0;
+#	array[141967]=141967;
+	for(;;){
+		printf("generate\n");
+		r=int(rand()*49000000);
+		printf("r=%d",r);
+		if(r in array){
+			;
+		}else{
+			i++;
+			array[r]=1;
+		}
+		if(i==10)
+			break;
+	}
+}
+
+{
+i=0;
+	if ($8 in array){
+#		printf("i=%d",i);
+		printf("	%s\t%s\n",$8,$9)	
+	}
+#	for(var in array)
+#		printf("%d:%d\n",var,array[var]);
+}
