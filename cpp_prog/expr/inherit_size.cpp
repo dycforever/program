@@ -26,7 +26,7 @@ class E:public D{
 class test{
 public:
 	test(){};
-	test(int i){};
+	test(int i){++i;};
 	void f(){};
 };
 int main(){

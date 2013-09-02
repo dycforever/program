@@ -11,8 +11,8 @@
 
 class Init{
 	const static float f =3.1;
-	const float f2;// =3.1;
 	int m;
+	const float f2;// =3.1;
 	int ar[3];
 public:
 	void show(){

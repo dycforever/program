@@ -14,12 +14,9 @@ export LIBRARY_PATH=../common
 
 all:Inspector
 
-Inspector:Inspector.o
+Inspector:Inspector.o Header.o ProgramHeader.o SectionHeader.o  
 	g++ -o $@ $^ $(CPPFLAGS) -L$(LIBRARY_PATH) -I$(CPLUS_INCLUDE_PATH) $(LDFLAGS) -lelf
-
-test:test.o
-	g++ -o $@ $^ $(CPPFLAGS) -L$(LIBRARY_PATH) -I$(CPLUS_INCLUDE_PATH) $(LDFLAGS)
 
 .PHONY:clean
 clean:
-	rm -rf test.o test Inspector Inspector.o
+	rm -rf Inspector *.o *Header

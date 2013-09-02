@@ -13,6 +13,8 @@
 // Linux C header
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <errno.h>
 
 // C++ header
 #include <string>
@@ -57,7 +59,7 @@ extern DYC_GLOBAL dyc_global;
         PRINT_COLOR(BLUE); \
         printf(" [DEBUG]  "); \
         UNPRINT_COLOR(); \
-        printf(format, ##arguments);\
+        printf(format"\n", ##arguments);\
         fflush(stdout);\
         dyc_global.unlock(); \
     }while(0)
@@ -67,7 +69,7 @@ extern DYC_GLOBAL dyc_global;
         PRINT_COLOR(GREEN); \
         printf("[TRACE]\t"); \
         UNPRINT_COLOR(); \
-        printf(format, ##arguments);\
+        printf(format"\n", ##arguments);\
         dyc_global.unlock(); \
     }while(0)
 
@@ -85,7 +87,7 @@ extern DYC_GLOBAL dyc_global;
 #define WARNING(format, arguments...) \
     do{ \
         dyc_global.lock(); \
-        PRINT_COLOR(RED); \
+        PRINT_COLOR(YELLOW); \
         printf("[WARNING] "); \
         UNPRINT_COLOR(); \
         printf("[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
@@ -103,6 +105,21 @@ extern DYC_GLOBAL dyc_global;
         fflush(stdout);\
         dyc_global.unlock(); \
     } while(0)
+
+
+#define CHECK_ERROR(ret, cond, fmt, arg...) do { \
+    if (!(cond)) {   \
+        FATAL(fmt, ##arg);  \
+        return (ret);  \
+    } \
+} while(0)
+
+#define CHECK_WARNING(ret, cond, fmt, arg...) do { \
+    if (!(cond)) {   \
+        WARNING(fmt, ##arg);  \
+        return (ret);  \
+    } \
+} while(0)
 
 // Memory operation define
 #define NEW new (std::nothrow)
@@ -131,9 +148,6 @@ extern DYC_GLOBAL dyc_global;
             (file_stream) = NULL; \
         } \
     } while (0)
-
-typedef unsigned char Byte;
-typedef uint32_t LocalID;
 
 // Some usefull const
 
@@ -249,19 +263,19 @@ inline int create_file_folder(const std::string &file_path) {
     return 0;
 }
 
-inline int get_file_size(const char *file_name, uint64_t &file_size) {
-    if (NULL == file_name) {
-        FATAL("Input arguments error: file_name[address: %p] is NULL!", file_name);
+inline int getFileSize(const char *fileName, uint64_t &fileSize) {
+    if (NULL == fileName) {
+        FATAL("Input arguments error: file_name[address: %p] is NULL!", fileName);
         return -1;
     }
 
-    struct stat file_information;
-    if (stat(file_name, &file_information) < 0) {
-        FATAL("Get file[%s] information failed!", file_name);
+    struct stat fileInformation;
+    if (stat(fileName, &fileInformation) < 0) {
+        FATAL("Get file[%s] information failed!", fileName);
         return -1;
     }
 
-    file_size = file_information.st_size;
+    fileSize = fileInformation.st_size;
 
     return 0;
 }
@@ -269,7 +283,7 @@ inline int get_file_size(const char *file_name, uint64_t &file_size) {
 template<typename T>
 inline int get_elements_numbers(const char *file_name, uint64_t &elements_numbers) {
     uint64_t file_size = 0;
-    if (get_file_size(file_name, file_size) != 0) {
+    if (getFileSize(file_name, file_size) != 0) {
         FATAL("Get file[%s] size failed!", file_name);
         return -1;
     }
