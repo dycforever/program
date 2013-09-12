@@ -1,3 +1,4 @@
+#include <sys/epoll.h>
 #ifndef __SOCKET_H__
 #define __SOCKET_H__
 
@@ -21,7 +22,7 @@ public:
     /// abort if address in use
     int listen();
     int connect(const InetAddress& localaddr);
-
+    int fd() {return _sockfd;}
     void shutdownWrite();
 
     ///
@@ -39,6 +40,11 @@ public:
     ///
     void setKeepAlive(bool on);
     int accept(InetAddress& peeraddr);
+
+    int handle(const epoll_event& event);
+    int writeCallback();
+    int readCallback();
+    int errorCallback();
 
 private:
     /// On success, returns a non-negative integer that is

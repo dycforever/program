@@ -16,13 +16,19 @@ int main() {
     ret = socket.listen();
     assert(ret != -1);
 
-    while (1) {
-        InetAddress peerAddr;
-        ret = socket.accept(peerAddr);
-        assert(ret != -1);
-        NOTICE("accept addr:%s", peerAddr.toIpPort().c_str());
-    }
-    
+    Epoller* epoller = NEW Epoller();
+    ret = epoller->createEpoll();
+    CHECK_ERROR(-1, ret == 0, "create epoller failed");
+    ret = epoller->addRW(&socket);
+    CHECK_ERROR(-1, ret == 0, "add read write epoller failed");
+
+//    while (1) {
+//        InetAddress peerAddr;
+//        ret = socket.accept(peerAddr);
+//        assert(ret != -1);
+//        NOTICE("accept addr:%s", peerAddr.toIpPort().c_str());
+//    }
+    epollRun(epoller);
 
     NOTICE("main go to sleep");
     while(1){ sleep(1000);}

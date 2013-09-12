@@ -7,7 +7,7 @@
 #include <algorithm>
 
 #include "InetAddress.h" 
-#include "Connection.h" 
+#include "Socket.h" 
 #include "Epoll.h"
 #include "Task.h"
 
@@ -49,10 +49,10 @@ class Server {
   int push_recv_task(TransTask*);
 
   /// Not thread safe, but in loop
-  Connection* new_connection(const InetAddress& peerAddr, uint32_t);
-  Connection* new_connection(const InetAddress& peerAddr);
+  Socket* new_connection(const InetAddress& peerAddr, uint32_t);
+  Socket* new_connection(const InetAddress& peerAddr);
 //  /// Thread safe.
-  void remove_connection(const Connection& conn);
+  void remove_connection(const Socket& conn);
 
   int remove_send_task(TransTask*);
   int remove_recv_task(TransTask*);

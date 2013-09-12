@@ -49,6 +49,14 @@ void printElf32_Shdr (Elf32_Shdr* shdr) {
     << "entsize: " << shdr->sh_entsize << endl;
 }
 
+int checkSectionHead(int fd) {
+    return 0;
+}
+
+int checkProgramHead(int fd) {
+    return 0;
+}
+
 void dumpMem(string out, char* buf, size_t size) {
     FILE* fpout = fopen(out.c_str(), "w");
     fwrite(buf, 1, size, fpout);

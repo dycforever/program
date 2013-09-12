@@ -132,4 +132,38 @@ void Socket::setKeepAlive(bool on)
             &optval, static_cast<socklen_t>(sizeof optval));
 }
 
+// return 0 means the socket can be removed
+int Socket::handle(const epoll_event& event) {
+    int ret = 0;
+    if (event.events & EPOLLIN) {
+        ret = readCallback();
+    } else if (event.events & EPOLLOUT) {
+        ret = writeCallback();
+    } else {
+        ret = -1;
+        NOTICE("unknow event");
+    }
+    if (ret < 0) {
+        errorCallback();
+    }
+    return ret;
+}
+
+int Socket::errorCallback() {
+    DEBUG("call error callback");
+    return 0;
+}
+
+int Socket::readCallback() {
+    DEBUG("call read callback");
+    return 0;
+}
+
+int Socket::writeCallback() {
+    DEBUG("call write callback");
+    return 0;
+}
+
+
+
 }

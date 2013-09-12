@@ -56,11 +56,11 @@ namespace net {
         return ret;
     }
 
-    Connection* Server::new_connection(const InetAddress& peerAddr) {
+    Socket* Server::new_connection(const InetAddress& peerAddr) {
         return new_connection(peerAddr, EPOLLIN | EPOLLOUT);
     }
 
-    Connection* Server::new_connection(const InetAddress& peerAddr, uint32_t op_types) {
+    Socket* Server::new_connection(const InetAddress& peerAddr, uint32_t op_types) {
         //                                      SOCK_NONBLOCK 
         int sockfd = ::socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
         Socket* socket = NEW Socket(sockfd);
@@ -70,7 +70,7 @@ namespace net {
             return NULL;
         }
 
-        Connection* conn = NEW Connection(socket, peerAddr);
+        Socket* conn = NEW Socket(socket, peerAddr);
         if (conn == NULL) {
             DELETE(socket);
             FATAL("NEW conn failed");
@@ -89,7 +89,7 @@ namespace net {
         return conn;
     }
   
-    void Server::remove_connection(const Connection& conn) {
+    void Server::remove_connection(const Socket& conn) {
 //        m_fd_to_conn_map.erase(conn.get_socket()->get_socket());
     }
 
