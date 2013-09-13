@@ -17,8 +17,8 @@ public:
     int addRead(Socket*);
     int addWrite(Socket*);
     int addRW(Socket*);
-    int addEvent(Socket* conn, uint32_t op_types);
-    int removeEvent(Socket* conn);
+    int addEvent(Socket* socket, uint32_t op_types);
+    int removeEvent(Socket* socket);
     int poll(Event*);
     void loop();
     void stop() {_stop = true;}
@@ -33,35 +33,35 @@ private:
     // if need
 //    EventList m_listen_events;
     Event* _active_events;
-    int _removeEvent(Socket* conn);
+    int _removeEvent(Socket* socket);
 
     static const int EPOLL_MAX_LISTEN_NUMBER=500;
 };
 
-inline int Epoller::addRead(Socket* conn) {
+inline int Epoller::addRead(Socket* socket) {
     lock();
-    int ret = addEvent(conn, EPOLLIN);
+    int ret = addEvent(socket, EPOLLIN);
     unlock();
     return ret;
 }
 
-inline int Epoller::addWrite(Socket* conn) {
+inline int Epoller::addWrite(Socket* socket) {
     lock();
-    int ret = addEvent(conn, EPOLLOUT);
+    int ret = addEvent(socket, EPOLLOUT);
     unlock();
     return ret;
 }
 
-inline int Epoller::addRW(Socket* conn) {
+inline int Epoller::addRW(Socket* socket) {
     lock();
-    int ret = addEvent(conn, EPOLLIN|EPOLLOUT);
+    int ret = addEvent(socket, EPOLLIN|EPOLLOUT);
     unlock();
     return ret;
 }
 
-inline int Epoller::removeEvent(Socket* conn) {
+inline int Epoller::removeEvent(Socket* socket) {
     lock();
-    _removeEvent(conn);
+    _removeEvent(socket);
     unlock();
     return 0;
 }
@@ -91,8 +91,8 @@ inline int Epoller::createEpoll() {
     return 0;
 }
 
-inline int Epoller::_removeEvent(Socket* conn) {
-    int sockfd = conn->fd();
+inline int Epoller::_removeEvent(Socket* socket) {
+    int sockfd = socket->fd();
     int epsfd = _epoll_socket;
     NOTICE("del port in epoll %d", epsfd);
     int ret = epoll_ctl(_epoll_socket, EPOLL_CTL_DEL, sockfd, NULL);
@@ -103,12 +103,12 @@ inline int Epoller::_removeEvent(Socket* conn) {
     return 0;
 }
 
-inline int Epoller::addEvent(Socket* conn, uint32_t op_types) {
-    int sockfd = conn->fd();
+inline int Epoller::addEvent(Socket* socket, uint32_t op_types) {
+    int sockfd = socket->fd();
 
     struct epoll_event* event = NEW struct epoll_event;
     event->data.fd = sockfd;
-    event->data.ptr = (void*)conn;
+    event->data.ptr = (void*)socket;
     event->events = op_types;
 
     int epsfd = _epoll_socket;
@@ -141,17 +141,17 @@ inline void Epoller::loop() {
             return;
         }
         for(int i = 0; i < nfds; ++i) {
-            int fd = _active_events[i].data.fd;
-            Socket* conn = (Socket*)_active_events[i].data.ptr;
-            if (conn == NULL) {
-                FATAL("find conn for fd[%d] failed", fd);
+            Socket* socket = (Socket*)_active_events[i].data.ptr;
+            int fd = socket->fd();
+            if (socket == NULL) {
+                FATAL("find socket for fd[%d] failed", fd);
             //    continue;
             }
             NOTICE("handle event in %d", fd);
-            int ret = conn->handle(_active_events[i]);
+            int ret = socket->handle(_active_events[i]);
             if (ret != 0) {
                 WARNING("handle failed");
-                removeEvent(conn);
+                removeEvent(socket);
             }
         }
     } //while !stop

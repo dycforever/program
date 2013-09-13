@@ -153,6 +153,15 @@ int Socket::handle(const epoll_event& event) {
     return ret;
 }
 
+
+int Socket::send(char* buf, size_t len) {
+    return write(_sockfd, buf, len);
+}
+
+int Socket::recv(char* buf, size_t len) {
+    return read(_sockfd, buf, len);
+}
+
 int Socket::handleError() {
     DEBUG("call error callback");
     return 0;

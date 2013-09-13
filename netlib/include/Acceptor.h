@@ -22,7 +22,7 @@ public:
     Socket* listen(const InetAddress& addr);
 
     int listen(Socket* socket, const InetAddress& addr);
-    int get_socket();
+    int fd();
     Socket* get_socket_obj() {
         return m_listen_socket;
     }

@@ -14,11 +14,23 @@ public:
     }
 };
 
+    int accepter(int fd) {
+        char buf[1024];
+        int count = read(fd, buf, 1024);
+        if (count < 0) {
+            FATAL("fd[%d] errno[%d]: %s", fd, errno, strerror(errno));
+            return -1;
+        }
+        buf[count] = 0;
+        NOTICE("recv %d bytes: %s", count, buf);
+        return 0;
+    }
+
     int echoRead(int fd) {
         char buf[1024];
         int count = read(fd, buf, 1024);
         if (count < 0) {
-            FATAL("errno[%d]: %s", errno, strerror(errno));
+            FATAL("fd[%d] errno[%d]: %s", fd, errno, strerror(errno));
             return -1;
         }
         buf[count] = 0;

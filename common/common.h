@@ -101,7 +101,7 @@ extern DYC_GLOBAL dyc_global;
         PRINT_COLOR(RED); \
         printf(" [FATAL]  "); \
         UNPRINT_COLOR(); \
-        printf("[%d:%s][%s:%d][%s()] " format"\n",errno ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments); \
+        printf("[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
         fflush(stdout);\
         dyc_global.unlock(); \
     } while(0)

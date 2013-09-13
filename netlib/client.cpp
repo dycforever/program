@@ -13,6 +13,7 @@ int main() {
     int ret = socket.connect(addr);
     assert(ret != -1);
     sleep(1);
+    socket.send((char*)"hello", 5);
 
     NOTICE("success~ client go to sleep");
     }

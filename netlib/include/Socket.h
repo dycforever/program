@@ -15,9 +15,7 @@ public:
     typedef boost::function<int()> CallbackFunc;
 
     explicit Socket(int sockfd)
-        : _sockfd(sockfd)
-    { }
-
+        : _sockfd(sockfd) { }
     ~Socket();
 
     int bind(const InetAddress& localaddr);
@@ -40,6 +38,8 @@ public:
     void setReadCallback(CallbackFunc cb) {_readCallback = cb;}
     void setErrorCallback(CallbackFunc cb) {_errorCallback = cb;}
 
+    int send(char* buf, size_t len);
+    int recv(char* buf, size_t len);
 private:
     /// On success, returns a non-negative integer that is
     /// a descriptor for the accepted socket, which has been
