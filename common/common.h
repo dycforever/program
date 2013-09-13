@@ -101,15 +101,34 @@ extern DYC_GLOBAL dyc_global;
         PRINT_COLOR(RED); \
         printf(" [FATAL]  "); \
         UNPRINT_COLOR(); \
-        printf("[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
+        printf("[%d:%s][%s:%d][%s()] " format"\n",errno ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments); \
+        fflush(stdout);\
+        dyc_global.unlock(); \
+    } while(0)
+
+#define FATAL_ERROR(format, arguments...) \
+    do{ \
+        dyc_global.lock(); \
+        PRINT_COLOR(RED); \
+        printf(" [FATAL]  "); \
+        UNPRINT_COLOR(); \
+        printf("[%d:%s][%s:%d][%s()] " format ,errno ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments, errno, strerror(errno)); \
         fflush(stdout);\
         dyc_global.unlock(); \
     } while(0)
 
 
+
 #define CHECK_ERROR(ret, cond, fmt, arg...) do { \
     if (!(cond)) {   \
         FATAL(fmt, ##arg);  \
+        return (ret);  \
+    } \
+} while(0)
+
+#define CHECK_ERRORNO(ret, cond, fmt, arg...) do { \
+    if (!(cond)) {   \
+        FATAL_ERROR(fmt" with error %d:%s\n", ##arg);  \
         return (ret);  \
     } \
 } while(0)

@@ -10,7 +10,11 @@ namespace dyc {
 
 Socket::~Socket()
 {
-    close(_sockfd);
+    if (close(_sockfd) == 0) {
+        NOTICE("close %d success", _sockfd);
+    } else {
+        FATAL("close %d failed: %d %s", _sockfd, errno, strerror(errno));
+    }
 }
 
 int Socket::connect(const InetAddress& peerAddr) {
@@ -136,34 +140,33 @@ void Socket::setKeepAlive(bool on)
 int Socket::handle(const epoll_event& event) {
     int ret = 0;
     if (event.events & EPOLLIN) {
-        ret = readCallback();
+        ret = handleRead();
     } else if (event.events & EPOLLOUT) {
-        ret = writeCallback();
+        ret = handleWrite();
     } else {
         ret = -1;
         NOTICE("unknow event");
     }
     if (ret < 0) {
-        errorCallback();
+        handleError();
     }
     return ret;
 }
 
-int Socket::errorCallback() {
+int Socket::handleError() {
     DEBUG("call error callback");
     return 0;
+//    return _errorCallback();
 }
 
-int Socket::readCallback() {
+int Socket::handleRead() {
     DEBUG("call read callback");
-    return 0;
+    return _readCallback();
 }
 
-int Socket::writeCallback() {
+int Socket::handleWrite() {
     DEBUG("call write callback");
-    return 0;
+    return _writeCallback();
 }
-
-
 
 }

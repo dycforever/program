@@ -1,7 +1,30 @@
 #include <iostream>
+#include <boost/bind.hpp>
 #include "netlib.h"
 
 using namespace dyc;
+
+class ReadCallback {
+public:
+    char buf[1024];
+    void operator() (int fd) {
+        int count = read(fd, buf, 1024);
+        buf[count] = 0;
+        NOTICE("recv %d bytes: %s", count, buf);
+    }
+};
+
+    int echoRead(int fd) {
+        char buf[1024];
+        int count = read(fd, buf, 1024);
+        if (count < 0) {
+            FATAL("errno[%d]: %s", errno, strerror(errno));
+            return -1;
+        }
+        buf[count] = 0;
+        NOTICE("recv %d bytes: %s", count, buf);
+        return 0;
+    }
 
 int main() {
     InetAddress addr("127.0.0.1", 8714);
@@ -9,6 +32,14 @@ int main() {
     int sockfd = createBlockingSocket();
     assert(sockfd != -1);
     Socket socket(sockfd);
+
+    Socket::CallbackFunc rcb = boost::bind(&echoRead, sockfd);
+    Socket::CallbackFunc wcb;
+    Socket::CallbackFunc ecb;
+
+    socket.setReadCallback(rcb);
+    socket.setWriteCallback(wcb);
+    socket.setErrorCallback(ecb);
 
     int ret = socket.bind(addr);
     assert(ret != -1);
