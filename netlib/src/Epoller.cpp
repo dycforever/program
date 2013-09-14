@@ -1,80 +1,58 @@
-#ifndef __EPOLLER_H__
-#define __EPOLLER_H__
-
-#include "Socket.h"
-#include "common.h"
+#include <boost/bind.hpp>
+#include "Epoller.h"
 
 namespace dyc {
 
-typedef struct epoll_event Event;
+Epoller::Epoller() :_stop(false){
+    _threadId = pthread_self();
+}
 
-class Epoller {
-public:
-    Epoller():_stop(false) {}
-    ~Epoller() {pthread_mutex_destroy(&_mutex);}
-    int createEpoll();
+bool Epoller::inThisThread() {
+    return _threadId == pthread_self();
+}
 
-    int addRead(Socket*);
-    int addWrite(Socket*);
-    int addRW(Socket*);
-    int addEvent(Socket* socket, uint32_t op_types);
-    int removeEvent(Socket* socket);
-    int poll(Event*);
-    void loop();
-    void stop() {_stop = true;}
-
-//    int add_listen_port(int socket);
-private:
-    void lock();
-    void unlock();
-    pthread_mutex_t _mutex;
-    int _epoll_socket;
-    bool _stop;
-    // if need
-//    EventList m_listen_events;
-    Event* _active_events;
-    int _removeEvent(Socket* socket);
-
-    static const int EPOLL_MAX_LISTEN_NUMBER=500;
-};
-
-inline int Epoller::addRead(Socket* socket) {
+int Epoller::addRead(Socket* socket) {
     lock();
     int ret = addEvent(socket, EPOLLIN);
     unlock();
     return ret;
 }
 
-inline int Epoller::addWrite(Socket* socket) {
+int Epoller::addWrite(Socket* socket) {
     lock();
     int ret = addEvent(socket, EPOLLOUT);
     unlock();
     return ret;
 }
 
-inline int Epoller::addRW(Socket* socket) {
-    lock();
-    int ret = addEvent(socket, EPOLLIN|EPOLLOUT);
-    unlock();
+int Epoller::addRW(Socket* socket) {
+    int ret = 0;
+    if (inThisThread()) {
+        ret = addEvent(socket, EPOLLIN|EPOLLOUT);
+    } else {
+        lock();
+        waitQueue.push_back(boost::bind(&Epoller::addRW, this, socket));
+        unlock();
+    }
     return ret;
 }
 
-inline int Epoller::removeEvent(Socket* socket) {
+int Epoller::removeEvent(Socket* socket) {
     lock();
     _removeEvent(socket);
     unlock();
     return 0;
 }
 
-inline void Epoller::lock() {
+void Epoller::lock() {
     pthread_mutex_lock(&_mutex);
 }
 
-inline void Epoller::unlock() {
+void Epoller::unlock() {
     pthread_mutex_unlock(&_mutex);
 }
 
-inline int Epoller::createEpoll() {
+int Epoller::createEpoll() {
     pthread_mutex_init(&_mutex, NULL);
     _stop = false;
     int sock = epoll_create(EPOLL_MAX_LISTEN_NUMBER);
@@ -91,7 +69,7 @@ inline int Epoller::createEpoll() {
     return 0;
 }
 
-inline int Epoller::_removeEvent(Socket* socket) {
+int Epoller::_removeEvent(Socket* socket) {
     int sockfd = socket->fd();
     int epsfd = _epoll_socket;
     NOTICE("del port in epoll %d", epsfd);
@@ -103,7 +81,7 @@ inline int Epoller::_removeEvent(Socket* socket) {
     return 0;
 }
 
-inline int Epoller::addEvent(Socket* socket, uint32_t op_types) {
+int Epoller::addEvent(Socket* socket, uint32_t op_types) {
     int sockfd = socket->fd();
 
     struct epoll_event* event = NEW struct epoll_event;
@@ -122,7 +100,7 @@ inline int Epoller::addEvent(Socket* socket, uint32_t op_types) {
     return 0;
 }
 
-inline int Epoller::poll(Event* list) {
+int Epoller::poll(Event* list) {
     NOTICE("epoll wait on %d list:%p size:%d", _epoll_socket, list, 10);
     int ret = epoll_wait(_epoll_socket, list, 10, -1);
     if (ret < 0) {
@@ -131,7 +109,7 @@ inline int Epoller::poll(Event* list) {
     return ret;
 }
 
-inline void Epoller::loop() {
+void Epoller::loop() {
     while(!_stop) {
         sleep(1);
         int nfds = poll(_active_events);
@@ -154,27 +132,14 @@ inline void Epoller::loop() {
                 removeEvent(socket);
             }
         }
+        if (waitQueue.empty()) {
+            continue;
+        }
+        std::vector<DelayFunctor>::iterator iter;
+        for (iter = waitQueue.begin(); iter != waitQueue.end(); ++iter) {
+            (*iter)();
+        }
     } //while !stop
 }
 
-inline void* epollRun(void* p) {
-    Epoller* epoller = (Epoller*)p;
-    epoller->loop();
-    return NULL;
 }
-
-//class EpollTask : public Task {
-//public:
-//    EpollTask(Epoller* poller) {
-//        _param = reinterpret_cast<void*>(poller);
-//    }
-//
-//    void* run(void* p) {
-//        Epoller* poller = reinterpret_cast<Epoller*>(p);
-//        poller->loop();
-//        return NULL;
-//    }
-//};
-
-}
-#endif

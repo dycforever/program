@@ -62,6 +62,8 @@ int main() {
     Epoller* epoller = NEW Epoller();
     ret = epoller->createEpoll();
     CHECK_ERROR(-1, ret == 0, "create epoller failed");
+
+    socket.setReadCallback(boost::bind(&Epoller::addRW, epoller, &socket));
     ret = epoller->addRW(&socket);
     CHECK_ERROR(-1, ret == 0, "add read write epoller failed");
 
