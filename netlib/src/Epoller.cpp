@@ -3,12 +3,7 @@
 
 namespace dyc {
 
-Epoller::Epoller() :_stop(false){
-    _threadId = pthread_self();
-}
-
-bool Epoller::inThisThread() {
-    return _threadId == pthread_self();
+Epoller::Epoller() {
 }
 
 int Epoller::addRead(Socket* socket) {
@@ -27,13 +22,7 @@ int Epoller::addWrite(Socket* socket) {
 
 int Epoller::addRW(Socket* socket) {
     int ret = 0;
-    if (inThisThread()) {
-        ret = addEvent(socket, EPOLLIN|EPOLLOUT);
-    } else {
-        lock();
-        waitQueue.push_back(boost::bind(&Epoller::addRW, this, socket));
-        unlock();
-    }
+    ret = addEvent(socket, EPOLLIN|EPOLLOUT);
     return ret;
 }
 
@@ -54,18 +43,13 @@ void Epoller::unlock() {
 
 int Epoller::createEpoll() {
     pthread_mutex_init(&_mutex, NULL);
-    _stop = false;
     int sock = epoll_create(EPOLL_MAX_LISTEN_NUMBER);
     if (sock < 0) {
         return sock;
     }
     NOTICE("create epoll socket:%d", sock);
     _epoll_socket = sock;
-    _active_events = NEW Event[EPOLL_MAX_LISTEN_NUMBER];
-    if (_active_events == NULL) {
-        FATAL("new active events failed");
-        return -1;
-    }
+
     return 0;
 }
 
@@ -107,39 +91,6 @@ int Epoller::poll(Event* list) {
         perror("poll failed:");
     }
     return ret;
-}
-
-void Epoller::loop() {
-    while(!_stop) {
-        sleep(1);
-        int nfds = poll(_active_events);
-        NOTICE("get %d events", nfds);
-        if (nfds < 0) {
-            FATAL("poll failed: %d", nfds);
-            return;
-        }
-        for(int i = 0; i < nfds; ++i) {
-            Socket* socket = (Socket*)_active_events[i].data.ptr;
-            int fd = socket->fd();
-            if (socket == NULL) {
-                FATAL("find socket for fd[%d] failed", fd);
-            //    continue;
-            }
-            NOTICE("handle event in %d", fd);
-            int ret = socket->handle(_active_events[i]);
-            if (ret != 0) {
-                WARNING("handle failed");
-                removeEvent(socket);
-            }
-        }
-        if (waitQueue.empty()) {
-            continue;
-        }
-        std::vector<DelayFunctor>::iterator iter;
-        for (iter = waitQueue.begin(); iter != waitQueue.end(); ++iter) {
-            (*iter)();
-        }
-    } //while !stop
 }
 
 }

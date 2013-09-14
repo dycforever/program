@@ -10,7 +10,7 @@ using namespace std;
 using namespace boost;
 
 struct Foo
-{ 
+{
     Foo( int _x ) : x(_x) {}
     ~Foo() { std::cout << "Destructing a Foo with x=" << x << "\n"; }
     int x;
@@ -62,7 +62,8 @@ int main()
 //    can not be:
 //      boost::shared_ptr ptr(new int);
     boost::shared_ptr<void> ptrVoid(new int);
-//    will core !
+
+//    the code below will core !
 //
 //    {
 //    boost::scoped_ptr<Foo> sptr(ptrVoid.get());

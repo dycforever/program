@@ -99,8 +99,7 @@ int Socket::accept(InetAddress& peeraddr)
     struct sockaddr_in addr;
     bzero(&addr, sizeof addr);
     int connfd = accept(_sockfd, &addr);
-    if (connfd >= 0)
-    {
+    if (connfd >= 0) {
         peeraddr.setSockAddrInet(addr);
     }
     return connfd;
