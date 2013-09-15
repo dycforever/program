@@ -17,8 +17,17 @@ int Server::accepter(Socket* sock, Epoller* poller) {
     }
     Socket* newso = NEW Socket(newfd);
     newso->setReadCallback(_readCallback);
+    newso->setWriteCallback(_writeCallback);
     poller->addRW(newso);
     return 0;
+}
+
+void Server::setReadCallback(CallbackFunc cb) {
+    _readCallback = cb;
+}
+
+void Server::setWriteCallback(CallbackFunc cb) {
+    _writeCallback = cb;
 }
 
 int Server::start() {
@@ -37,7 +46,7 @@ int Server::start() {
     ret = _epoller->createEpoll();
     CHECK_ERROR(-1, ret == 0, "create epoller failed");
 
-    CallbackFunc acceptCallback = boost::bind(&Server::accepter, this, _listenSocket, _epoller);
+    CallbackFunc acceptCallback = boost::bind(&Server::accepter, this, _1, _epoller);
     _listenSocket->setReadCallback(acceptCallback);
 
     ret = _epoller->addRW(_listenSocket);

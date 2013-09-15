@@ -12,7 +12,7 @@ class InetAddress;
 // It's thread safe, all operations are delagated to OS.
 class Socket {
 public:
-    typedef boost::function<int()> CallbackFunc;
+    typedef boost::function<int(Socket*)> CallbackFunc;
 
     explicit Socket(int sockfd)
         : _sockfd(sockfd) { }
@@ -24,7 +24,7 @@ public:
     int connect(const InetAddress& localaddr);
 
     int fd() {return _sockfd;}
-    void shutdownWrite();
+    int shutdownWrite();
 
     /// Enable/disable TCP_NODELAY (disable/enable Nagle's algorithm).
     void setTcpNoDelay(bool on);

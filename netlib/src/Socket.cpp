@@ -105,9 +105,9 @@ int Socket::accept(InetAddress& peeraddr)
     return connfd;
 }
 
-void Socket::shutdownWrite()
+int Socket::shutdownWrite()
 {
-    shutdown(_sockfd, SHUT_WR);
+    return shutdown(_sockfd, SHUT_WR);
 }
 
 void Socket::setTcpNoDelay(bool on)
@@ -169,12 +169,12 @@ int Socket::handleError() {
 
 int Socket::handleRead() {
     DEBUG("call read callback");
-    return _readCallback();
+    return _readCallback(this);
 }
 
 int Socket::handleWrite() {
     DEBUG("call write callback");
-    return _writeCallback();
+    return _writeCallback(this);
 }
 
 }

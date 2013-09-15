@@ -5,4 +5,5 @@
 #include "EventLoop.h"
 #include "Server.h"
 #include "InetAddress.h"
+#include "Client.h"
 

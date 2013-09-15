@@ -6,6 +6,8 @@
 #include <list>
 #include <algorithm>
 
+#include <boost/function.hpp>
+
 #include "InetAddress.h" 
 #include "Socket.h" 
 #include "Epoller.h"
@@ -15,8 +17,7 @@ namespace dyc {
 
 class Server {
 public:
-
-    typedef boost::function<int()> CallbackFunc;
+    typedef boost::function<int(Socket*)> CallbackFunc;
     Server(const InetAddress& listenAddr);
     ~Server();  
 
@@ -30,6 +31,9 @@ public:
     void remove_connection(const Socket& conn);
 
     int accepter(Socket* sock, Epoller* poller);
+
+    void setReadCallback(CallbackFunc cb);
+    void setWriteCallback(CallbackFunc cb);
 private:
 
     const InetAddress _listenAddr;
