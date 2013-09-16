@@ -53,7 +53,8 @@ public:
         size_t _len;
     };
 
-    DownloadServer():_readingTask(NULL), _processingHead(false) {
+    DownloadServer():_writingTask(NULL), _readingTask(NULL), _processingHead(false)
+                      {
     }
 
     int recvData(Socket* socket) {
@@ -71,11 +72,16 @@ public:
             _readingTask = NEW Task(buf, _head);
             _rpos = _readingTask->_data;
             _needRead = _readingTask->_len;
-            DEBUG("OK, now it's a request bodylen:%lu", _needRead);
+            DEBUG("OK, now it's a request body len:%lu", _needRead);
         }
 
         int hasRead = socket->recv(_rpos, _needRead);
         CHECK_ERRORNO(-1, hasRead >= 0, "socket[%d] read failed", socket->fd());
+        if (hasRead == 0) {
+            DELETE(socket);
+        }
+
+        DEBUG("rest %u bytes", _needRead);
 
         _needRead -= hasRead;
         _rpos += hasRead;
@@ -87,6 +93,7 @@ public:
             }
             if (!_processingHead) {
                 Task* task = createSendTask(_readingTask->_data);
+                DEBUG("push task %p", task->_data);
                 pushWrite(task);
             }
             DELETE(_readingTask);
@@ -103,6 +110,7 @@ public:
         FILE* fp = fopen(path, "r");
         uint64_t hr = fread(buf, 1, len, fp);
         CHECK_ERROR(NULL, hr==len, "read file[%s] size failed: read %lu", path, hr);
+        DEBUG("read file %lu bytes: %p", hr, buf);
 
         Task* task = NEW Task(buf, len);
         return task;
@@ -121,6 +129,7 @@ public:
         CHECK_ERROR(NULL, !list.empty(), "list is empty");
         Task* task = list.front();
         list.pop_front();
+        DEBUG("pop task %p", task->_data);
         return task;
     }
 
@@ -129,7 +138,8 @@ public:
     }
 
     int sendData(Socket* socket) {
-        if (_writingTask != NULL) {
+        DEBUG("this time _writingTask:%p", _writingTask);
+        if (_writingTask == NULL) {
             _writingTask = getNextTask(_writeTasks);
             if (_writingTask == NULL) 
                 return 0;
@@ -138,7 +148,7 @@ public:
         }
         DEBUG("begin to send file");
         int hasWrite = socket->send(_wpos, _wlen);
-        CHECK_ERRORNO(-1, hasWrite >= 0, "socket[%d] write failed", socket->fd());
+        CHECK_ERRORNO(-1, hasWrite >= 0, "socket[%d] write %p failed", socket->fd(), _wpos);
 
         _wlen -= hasWrite;
         _wpos += hasWrite;

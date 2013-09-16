@@ -21,15 +21,15 @@ int main(int argc, char** argv) {
     socket.reset(client.connect());
     uint64_t len = strlen(file);
     socket->send((char*)&len, sizeof len);
-    socket->send(file, sizeof file);
-    NOTICE("send over");
+    int count = socket->send(file, len);
+    NOTICE("send %d bytes over", count);
 
     char* buf = NEW char[1024 * 1024 * 10];
 
-    int count = socket->recv(buf, 234);
+    count = socket->recv(buf, 234);
 
 //    int ret = socket->shutdownWrite();
 //    CHECK_ERROR(-1, ret==0, "socket shutdown failed");
 
-    NOTICE("get response: %d", count);
+    NOTICE("get response: %d %s", count, buf);
 }
