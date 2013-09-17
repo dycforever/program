@@ -40,6 +40,7 @@ public:
 
     int send(char* buf, size_t len);
     int recv(char* buf, size_t len);
+
 private:
     /// On success, returns a non-negative integer that is
     /// a descriptor for the accepted socket, which has been
@@ -55,6 +56,9 @@ private:
     int handleRead();
     int handleWrite();
     int handleError();
+
+    int events;
+    int revents;
 };
 
 }

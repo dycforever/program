@@ -1,3 +1,4 @@
+
 export CPLUS_INCLUDE_PATH=../common
 export CC=g++
 #export CFLAGS= -g -pipe -Wall -Werror -fPIC -I./include/ -I../common -L../common
@@ -47,3 +48,4 @@ ThreadPool.o:ThreadPool.cpp
 .PHONY:clean
 clean:
 	rm -rf src/*.o *.d *.o server client test
+

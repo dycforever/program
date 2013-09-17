@@ -38,66 +38,102 @@ int echoWrite(Socket* socket) {
     return 0;
 }
 
-class DownloadServer {
+#define AFTER(p) ((char*)p)+sizeof(*p)
 
-public:
+class Task {
+    public:
 
     typedef uint64_t Head;
+    Task():_hpos((char*)&_head), _needRead(sizeof(Head)){
+        _data = NULL;
+         _bpos = NULL;
+    }
 
-    class Task {
-        public:
+    Task(char* data, size_t len): _data(data), _len(len){
+    }
 
-        Task(char* data, size_t len):_data(data), _len(len) {
+    char* _data;
+    size_t _len;
+    
+    char* _hpos;
+    char* _bpos;
+    Head _head;
+    size_t _needRead;
+
+
+    int readHead(Socket* socket) {
+        if (_hpos == AFTER(&_head)) {
+            return true;
         }
-        char* _data;
-        size_t _len;
-    };
 
-    DownloadServer():_writingTask(NULL), _readingTask(NULL), _processingHead(false)
-                      {
+        int count = socket->recv(_hpos, _needRead);
+        CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
+        if (count == 0) {
+            DELETE(socket);
+        }
+        _hpos += count;
+        _needRead -= count;
+
+        if (_needRead == 0) {
+            _data = NEW char[_head];
+            _needRead = _head;
+            _bpos = _data;
+            DEBUG("finish read head %lu", _head);
+            return 0;
+        }
+        return 1;
+    }
+
+    int readBody (Socket* socket) {
+        if (_bpos != _data + _head) {
+            int count = socket->recv(_bpos, _needRead);
+            CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
+            if (count == 0) {
+                DELETE(socket);
+            }
+            _bpos += count;
+            _needRead -= count;
+            if (_needRead == 0) {
+                *(_bpos) = 0;
+            }
+        }
+        return _needRead;
+    }
+};
+
+class Connection {
+public:
+
+    Connection():_writingTask(NULL), _readingTask(NULL), _processingHead(false) {
     }
 
     int recvData(Socket* socket) {
-        if (!_processingHead && _readingTask == NULL) {
-            _processingHead = true;
-            _readingTask = NEW Task((char*)&_head, sizeof(_head));
-            _rpos = _readingTask->_data;
-            _needRead = _readingTask->_len;
-            DEBUG("OK, Let's process a new request len:%lu", _needRead);
-        }
-
+        int headret = 0;
         if (_readingTask == NULL) {
-            _processingHead = false;
-            char* buf = NEW char[_head];
-            _readingTask = NEW Task(buf, _head);
-            _rpos = _readingTask->_data;
-            _needRead = _readingTask->_len;
-            DEBUG("OK, now it's a request body len:%lu", _needRead);
+            _readingTask = NEW Task();
+        }
+        headret = _readingTask->readHead(socket);
+        if(headret == 1) {
+            return 0;
+        } else if (headret != 0) {
+            FATAL("read head failed");
+            return -1;
         }
 
-        int hasRead = socket->recv(_rpos, _needRead);
-        CHECK_ERRORNO(-1, hasRead >= 0, "socket[%d] read failed", socket->fd());
-        if (hasRead == 0) {
-            DELETE(socket);
-        }
+        int bodyret = 0;
+        bodyret = _readingTask->readBody(socket);
 
-        DEBUG("rest %u bytes", _needRead);
-
-        _needRead -= hasRead;
-        _rpos += hasRead;
-
-        if (_needRead == 0) {
-            DEBUG("_needRead = 0");
-            if (_processingHead) {
-                DEBUG("get head %lu", _head);
-            }
-            if (!_processingHead) {
-                Task* task = createSendTask(_readingTask->_data);
-                DEBUG("push task %p", task->_data);
-                pushWrite(task);
-            }
+        if (bodyret == 0) {
+            Task* task = createSendTask(_readingTask->_data);
+            DEBUG("push task %p", task->_data);
+            pushWrite(task);
+            // TODO
             DELETE(_readingTask);
+        } else if(bodyret < 0) {
+            FATAL("read body failed");
+            return -1;
         }
+
         return 0;
     }
 
@@ -129,7 +165,6 @@ public:
         CHECK_ERROR(NULL, !list.empty(), "list is empty");
         Task* task = list.front();
         list.pop_front();
-        DEBUG("pop task %p", task->_data);
         return task;
     }
 
@@ -172,10 +207,8 @@ private:
     list<Task> _readTasks;
     Task* _readingTask;
     char* _rpos;
-    size_t _needRead;
     bool _processingHead;
 
-    Head _head;
 };
 
 int main(int argc, char** argv) {
@@ -186,8 +219,8 @@ int main(int argc, char** argv) {
     }
     InetAddress addr("127.0.0.1", port);
     Server server(addr);
-    DownloadServer downloader;
-    server.setReadCallback(bind(&DownloadServer::recvData, &downloader, _1));
-    server.setWriteCallback(bind(&DownloadServer::sendData, &downloader, _1));
+    Connection downloader;
+    server.setReadCallback(bind(&Connection::recvData, &downloader, _1));
+    server.setWriteCallback(bind(&Connection::sendData, &downloader, _1));
     server.start();
 }
