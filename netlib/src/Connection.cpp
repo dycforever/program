@@ -1,33 +1,39 @@
+
+#include <boost/bind.hpp>
+
 #include "Connection.h"
+#include "EventLoop.h"
 #include "util.h"
 
 namespace dyc {
 
-Connection::Connection(Socket* socket):_writingTask(NULL), _readingTask(NULL), _processingHead(false), _socket(socket) {
-    _socket->setReadCallback(boost::bind(&recvData, this, _socket));
-    _socket->setWriteCallback(boost::bind(&sendData, this, _socket));
+Connection::Connection(Socket* socket, EventLoop* loop): _writingTask(NULL), _readingTask(NULL), 
+                                        _processingHead(false), _socket(socket),
+                                        _loop(loop) {
+    _socket->setReadCallback(boost::bind(&Connection::recvData, this, _socket));
+    _socket->setWriteCallback(boost::bind(&Connection::sendData, this, _socket));
 }
 
 int Connection::recvData(Socket* socket) {
     int headret = 0;
     if (_readingTask == NULL) {
-        _readingTask = NEW Task();
+        _readingTask = NEW RecvTask();
     }
     headret = _readingTask->readHead(socket);
-    if(headret == 1) {
+    if(headret > 0) {
         return 0;
     } else if (headret != 0) {
         FATAL("read head failed");
         return -1;
     }
+    // headret == 0
 
     int bodyret = 0;
     bodyret = _readingTask->readBody(socket);
 
     if (bodyret == 0) {
-
-        close fd && delete socket
-
+        _loop->remove(socket);
+        DELETE(socket);
     } else if(bodyret < 0) {
         FATAL("read body failed");
         return -1;
@@ -35,18 +41,19 @@ int Connection::recvData(Socket* socket) {
     if (_readingTask->over()) {
         _processingHead = false;
         // TODO this is read complete callback !!
-        Task* task = createSendTask(_readingTask->_data);
+        SendTask* task = createSendTask(_readingTask->_data);
         DEBUG("push task %p", task->_data);
         pushWrite(task);
-
-        free _readingTask->_data and data
+        socket->enableWrite();
+        _loop->updateSocket(socket);
+        DELETE(_readingTask->_data);
         DELETE(_readingTask);
     }
 
     return 0;
 }
 
-Task* Connection::createSendTask(char* path) {
+SendTask* Connection::createSendTask(char* path) {
     DEBUG("look for file %s", path);
     uint64_t len;
     int ret = getFileSize(path, len);
@@ -58,28 +65,31 @@ Task* Connection::createSendTask(char* path) {
     CHECK_ERROR(NULL, hr==len, "read file[%s] size failed: read %lu", path, hr);
     DEBUG("read file %lu bytes: %p", hr, buf);
 
-    Task* task = NEW Task(buf, len);
+    SendTask* task = NEW SendTask(buf, len);
     return task;
 }
 
-int64_t Connection::send(const char* data, int64_t size) {
-    Task* task = Task(data, size);
-    pushWrite(Task* task);
+int Connection::send(const char* data, int64_t size) {
+    SendTask* task = NEW SendTask(data, size);
+    pushWrite(task);
+    _socket->enableWrite();
+    _loop->updateSocket(_socket);
+    return 0;
 }
 
-void Connection::pushWrite(Task* task) {
+int Connection::pushWrite(SendTask* task) {
     MutexLockGuard lock(_listMutex);
     _writeTasks.push_back(task);
-    _loop->update(task, write);
+    return 0;
 }
 
-Task* Connection::getNextTask(list<Task*>& list) {
+SendTask* Connection::getNextTask(std::list<SendTask*>& list) {
     MutexLockGuard lock(_listMutex);
     if (list.empty()) {
         return NULL;
     }
     CHECK_ERROR(NULL, !list.empty(), "list is empty");
-    Task* task = list.front();
+    SendTask* task = list.front();
     list.pop_front();
     return task;
 }
@@ -92,7 +102,8 @@ int Connection::sendData(Socket* socket) {
     if (_writingTask == NULL) {
         _writingTask = getNextTask(_writeTasks);
         if (_writingTask == NULL) {
-            _loop->update(task, no write);
+            socket->disableWrite();
+            _loop->updateSocket(socket);
             return 0;
         }
         _wpos = _writingTask->_data;

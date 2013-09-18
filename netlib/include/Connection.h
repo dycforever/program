@@ -6,6 +6,8 @@
 #include <semaphore.h>
 
 #include "InetAddress.h"
+#include "Mutex.h"
+#include "Socket.h"
 
 namespace dyc {
 
@@ -24,26 +26,34 @@ struct MNTLHead {
 
 #define AFTER(p) ((char*)p)+sizeof(*p)
 
-class Task {
-    public:
+class SendTask {
+public:
+    SendTask(const char* data, size_t len):_data(data), _len(len){;}
+    const char* _data;
+    size_t _len;
 
-    typedef uint64_t Head;
-    Task():_hpos((char*)&_head), _needRead(sizeof(Head)){
-        _data = NULL;
-         _bpos = NULL;
+};
+
+class RecvTask {
+public:
+    bool over() {
+        return _finish;
     }
 
-    Task(char* data, size_t len): _data(data), _len(len){
+    typedef uint64_t Head;
+    RecvTask():_hpos((char*)&_head), _needRead(sizeof(Head)){
+        _data = NULL;
+        _bpos = NULL;
+        _finish = false;
     }
 
     char* _data;
-    size_t _len;
-    
     char* _hpos;
     char* _bpos;
+
     Head _head;
     size_t _needRead;
-
+    bool _finish;
 
     int readHead(Socket* socket) {
         if (_hpos == AFTER(&_head)) {
@@ -52,10 +62,6 @@ class Task {
 
         int count = socket->recv(_hpos, _needRead);
         CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
-        if (count == 0) {
-            remove from epoll
-            DELETE(socket);
-        }
         _hpos += count;
         _needRead -= count;
 
@@ -69,46 +75,58 @@ class Task {
     }
 
     int readBody (Socket* socket) {
+        int count = 0;
         if (_bpos != _data + _head) {
-            int count = socket->recv(_bpos, _needRead);
+            count = socket->recv(_bpos, _needRead);
             CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
             if (count == 0) {
                 WARNING("no body whith head: %lu", _head);
-                remove from epoll
-                DELETE(socket);
             }
             _bpos += count;
             _needRead -= count;
             if (_needRead == 0) {
-                *(_bpos) = 0;
+                _finish = true;
             }
         }
-        return _needRead;
+        return count;
     }
 };
 
-class Task;
+class RecvTask;
+class SendTask;
+class EventLoop;
 
 class Connection {
 public:
-    explicit Connection(Socket*);
-    int64_t send(const char* data, int64_t size);
+    explicit Connection(Socket*, EventLoop*);
+    int send(const char* data, int64_t size);
 
 private:
-    MutexLock _listMutex;
-    list<Task*> _writeTasks;
-    Task* _writingTask;
-    size_t _wlen;
-    char* _wpos;
+    int recvData(Socket* socket);
+    int sendData(Socket* socket);
+    SendTask* createSendTask(char* path);
+    SendTask* getNextTask(std::list<SendTask*>& list);
+    void readTaskComplete();
 
-    list<Task> _readTasks;
-    Task* _readingTask;
+    int pushWrite(SendTask* task);
+
+    MutexLock _listMutex;
+    std::list<SendTask*> _writeTasks;
+    SendTask* _writingTask;
+
+    RecvTask* _readingTask;
     char* _rpos;
     bool _processingHead;
 
     InetAddress localAddr;
     InetAddress peerAddr;
     Socket* _socket;
+
+    EventLoop* _loop;
+
+
+    uint64_t _wlen;
+    const char* _wpos;
 };
 
 }

@@ -22,6 +22,7 @@ public:
     int listen();
     int accept(InetAddress& peeraddr);
     int connect(const InetAddress& localaddr);
+    int getEvents() { return _events;}
 
     int fd() {return _sockfd;}
     int shutdownWrite();
@@ -33,12 +34,18 @@ public:
     /// Enable/disable SO_KEEPALIVE
     void setKeepAlive(bool on);
 
+
+    void enableRead();
+    void disableRead();
+    void enableWrite();
+    void disableWrite();
+
     int handle(const epoll_event& event);
     void setWriteCallback(CallbackFunc cb) {_writeCallback = cb;}
     void setReadCallback(CallbackFunc cb) {_readCallback = cb;}
     void setErrorCallback(CallbackFunc cb) {_errorCallback = cb;}
 
-    int send(char* buf, size_t len);
+    int send(const char* buf, size_t len);
     int recv(char* buf, size_t len);
 
 private:
@@ -57,8 +64,8 @@ private:
     int handleWrite();
     int handleError();
 
-    int events;
-    int revents;
+    int _events;
+    int _revents;
 };
 
 }

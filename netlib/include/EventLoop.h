@@ -34,11 +34,12 @@ class EventLoop
     void queueInLoop(const DelayFunctor& cb);
 
     // internal usage
-    void updateSocket(Socket* Socket);
+    int updateSocket(Socket* Socket);
     void removeSocket(Socket* Socket);
 
     bool inThisThread() {return _threadId == pthread_self();}
     static EventLoop* getEventLoopOfCurrentThread();
+    int remove(Socket*);
 
 private:
     Event* _active_events;

@@ -18,8 +18,9 @@ public:
     int addRead(Socket*);
     int addWrite(Socket*);
     int addRW(Socket*);
-    int addEvent(Socket* socket, uint32_t op_types);
-    int removeEvent(Socket* socket);
+    int removeEvent(Socket*);
+
+    int updateEvent(Socket*);
     int poll(Event*);
 
     static const int EPOLL_MAX_LISTEN_NUMBER=500;
@@ -28,6 +29,7 @@ private:
     void lock();
     void unlock();
     int _removeEvent(Socket* socket);
+    int _addEvent(Socket* , uint32_t);
 
     pthread_mutex_t _mutex;
     int _epoll_socket;

@@ -83,6 +83,14 @@ void EventLoop::quit()
   quit_ = true;
 }
 
+int EventLoop::updateSocket(Socket* socket) {
+    return _poller->updateEvent(socket);
+}
+
+int EventLoop::remove(Socket* socket) {
+    return _poller->removeEvent(socket);
+}
+
 void EventLoop::runInLoop(const DelayFunctor& cb)
 {
   if (inThisThread())

@@ -16,8 +16,15 @@ int Server::accepter(Socket* sock, Epoller* poller) {
         return -1;
     }
     Socket* newso = NEW Socket(newfd);
-    Connection* conn = NEW Connection(newso);
-    poller->addRead(conn);
+    Connection* conn = NEW Connection(newso, _loop);
+    addConnection(conn);
+    poller->addRead(newso);
+    return 0;
+}
+
+
+int Server::addConnection(Connection* conn) {
+    _connections.insert(conn);
     return 0;
 }
 

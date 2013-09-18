@@ -47,7 +47,6 @@ int main(int argc, char** argv) {
     }
     InetAddress addr("127.0.0.1", port);
     Server server(addr);
-    Connection downloader;
 //    server.setReadCallback(bind(&Connection::recvData, &downloader, _1));
 //    server.setWriteCallback(bind(&Connection::sendData, &downloader, _1));
     server.start();

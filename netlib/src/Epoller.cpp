@@ -8,29 +8,29 @@ Epoller::Epoller() {
 
 int Epoller::addRead(Socket* socket) {
     lock();
-    int ret = addEvent(socket, EPOLLIN);
+    int ret = _addEvent(socket, EPOLLIN);
     unlock();
     return ret;
 }
 
 int Epoller::addWrite(Socket* socket) {
     lock();
-    int ret = addEvent(socket, EPOLLOUT);
+    int ret = _addEvent(socket, EPOLLOUT);
     unlock();
     return ret;
 }
 
 int Epoller::addRW(Socket* socket) {
     int ret = 0;
-    ret = addEvent(socket, EPOLLIN|EPOLLOUT);
+    ret = _addEvent(socket, EPOLLIN|EPOLLOUT);
     return ret;
 }
 
 int Epoller::removeEvent(Socket* socket) {
     lock();
-    _removeEvent(socket);
+    int ret = _removeEvent(socket);
     unlock();
-    return 0;
+    return ret;
 }
 
 void Epoller::lock() {
@@ -65,7 +65,7 @@ int Epoller::_removeEvent(Socket* socket) {
     return 0;
 }
 
-int Epoller::addEvent(Socket* socket, uint32_t op_types) {
+int Epoller::_addEvent(Socket* socket, uint32_t op_types) {
     int sockfd = socket->fd();
 
     struct epoll_event* event = NEW struct epoll_event;
@@ -93,21 +93,37 @@ int Epoller::poll(Event* list) {
     return ret;
 }
 
-void Epoller::updateEvent(Socket* socket) {
-  Poller::assertInLoopThread();
-  const int stat = socket->stat();
-  // new 和 deleted状态都表示epoll没有在监听，区别在于map是否建立
-  if (stat == kNew || stat == kDeleted) {
-    socket->set_stat(kAdded);
-    update(EPOLL_CTL_ADD, socket);
-  } else { //stat == kAdded 
-    if (socket->isNoneEvent()) {
-      update(EPOLL_CTL_DEL, socket);
-      socket->set_stat(kDeleted);
-    } else {
-      update(EPOLL_CTL_MOD, socket);
+int Epoller::updateEvent(Socket* socket) {
+    struct epoll_event event;
+    int sockfd = socket->fd();
+    event.data.fd = sockfd;
+    event.data.ptr = (void*)socket;
+    event.events = socket->getEvents();
+    NOTICE("mod in epoll %d", socket->getEvents());
+    int ret = epoll_ctl(_epoll_socket, EPOLL_CTL_MOD, sockfd, &event);
+    if( ret < 0 ){
+        FATAL("ctl socket:%d into epoll fd:%d failed errno:%d %s", sockfd, _epoll_socket, errno, strerror(errno));
+        return -1;
     }
-  }
+    return 0;
 }
+
+//int Epoller::updateEvent(Socket* socket) {
+//  Poller::assertInLoopThread();
+//  const int stat = socket->stat();
+//  // new 和 deleted状态都表示epoll没有在监听，区别在于map是否建立
+//  if (stat == kNew || stat == kDeleted) {
+//    socket->set_stat(kAdded);
+//    update(EPOLL_CTL_ADD, socket);
+//  } else { //stat == kAdded 
+//    if (socket->isNoneEvent()) {
+//      update(EPOLL_CTL_DEL, socket);
+//      socket->set_stat(kDeleted);
+//    } else {
+//      update(EPOLL_CTL_MOD, socket);
+//    }
+//  }
+//  return 0;
+//}
 
 }

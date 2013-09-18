@@ -152,8 +152,24 @@ int Socket::handle(const epoll_event& event) {
     return ret;
 }
 
+void Socket::enableRead() {
+    _events |= EPOLLIN;
+}
 
-int Socket::send(char* buf, size_t len) {
+void Socket::disableRead() {
+    _events &= (~EPOLLIN);
+}
+
+void Socket::enableWrite() {
+    _events |= EPOLLOUT;
+}
+
+void Socket::disableWrite() {
+    _events &= (~EPOLLOUT);
+}
+
+
+int Socket::send(const char* buf, size_t len) {
     return write(_sockfd, buf, len);
 }
 
