@@ -21,114 +21,94 @@ struct MNTLHead {
     }
 };
 
-class SendMesg {
-public:
-    SendMesg(
-        int32_t           srcRank,
-        int32_t           destRank,
-        int32_t           tag,
-        const void        *sendBuf,
-        uint32_t          bufferSize) :head(srcRank, destRank, tag),
-                                       _data(sendBuf), _length(bufferSize) {
-        isBody = false;
-        _ptr = &head;
-        sem_init(&sem, 0, 0);
+
+#define AFTER(p) ((char*)p)+sizeof(*p)
+
+class Task {
+    public:
+
+    typedef uint64_t Head;
+    Task():_hpos((char*)&_head), _needRead(sizeof(Head)){
+        _data = NULL;
+         _bpos = NULL;
     }
 
-    void wait() {
-        sem_wait(&sem);
+    Task(char* data, size_t len): _data(data), _len(len){
     }
 
-    void post() {
-        sem_post(&sem);
+    char* _data;
+    size_t _len;
+    
+    char* _hpos;
+    char* _bpos;
+    Head _head;
+    size_t _needRead;
+
+
+    int readHead(Socket* socket) {
+        if (_hpos == AFTER(&_head)) {
+            return true;
+        }
+
+        int count = socket->recv(_hpos, _needRead);
+        CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
+        if (count == 0) {
+            remove from epoll
+            DELETE(socket);
+        }
+        _hpos += count;
+        _needRead -= count;
+
+        if (_needRead == 0) {
+            _data = NEW char[_head];
+            _needRead = _head;
+            _bpos = _data;
+            DEBUG("finish read head %lu", _head);
+        }
+        return count;
     }
 
-private:
-    MNTLHead head;
-    const void* _data;
-    uint64_t _length;
-
-    bool isBody;
-    void* _ptr;
-    sem_t sem;
-
-friend class Connection;
+    int readBody (Socket* socket) {
+        if (_bpos != _data + _head) {
+            int count = socket->recv(_bpos, _needRead);
+            CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
+            if (count == 0) {
+                WARNING("no body whith head: %lu", _head);
+                remove from epoll
+                DELETE(socket);
+            }
+            _bpos += count;
+            _needRead -= count;
+            if (_needRead == 0) {
+                *(_bpos) = 0;
+            }
+        }
+        return _needRead;
+    }
 };
 
-class RecvMesg {
-public:
-    RecvMesg(
-        int32_t           srcRank,
-        int32_t           destRank,
-        int32_t           tag,
-        const void        *sendBuf,
-        uint32_t          bufferSize) :head(srcRank, destRank, tag),
-                                       _data(sendBuf), _length(bufferSize) {
-        isBody = false;
-        _ptr = &head;
-        sem_init(&sem, 0, 0);
-    }
-
-    void wait() {
-        sem_wait(&sem);
-    }
-
-    void post() {
-        sem_post(&sem);
-    }
-
-private:
-    MNTLHead head;
-    const void* _data;
-    uint64_t _length;
-
-    bool isBody;
-    void* _ptr;
-    sem_t sem;
-};
-
-
-    RecvMesg* pushSendTask(
-        int32_t           srcRank,
-        int32_t           destRank,
-        int32_t           tag,
-        const void        *sendBuf,
-        uint32_t          bufferSize);
-
-    RecvMesg* pushRecvTask(
-        int32_t           srcRank,
-        int32_t           destRank,
-        int32_t           tag,
-        const void        *sendBuf,
-        uint32_t          bufferSize);
-
-
+class Task;
 
 class Connection {
 public:
-    explicit Connection(int);
-    Connection(int, const char* ip, uint16_t port);
+    explicit Connection(Socket*);
+    int64_t send(const char* data, int64_t size);
 
-    int handle(const epoll_event& event);
-    int writeCallback();
-    int readCallback();
-
-    uint64_t writeMesg(SendMesg*);
-    int fd(){return _socket;}
-    int establish();
 private:
-    int _socket;
-    std::list<SendMesg*> _sendMesgList;
-    std::list<RecvMesg*> _recvMesgList;
-    SendMesg* _onWrite;
-    RecvMesg* _onRead;
+    MutexLock _listMutex;
+    list<Task*> _writeTasks;
+    Task* _writingTask;
+    size_t _wlen;
+    char* _wpos;
+
+    list<Task> _readTasks;
+    Task* _readingTask;
+    char* _rpos;
+    bool _processingHead;
+
     InetAddress localAddr;
     InetAddress peerAddr;
-
-    bool _isReadingHead;
-    MNTLHead _headHasRead;
-    char* _headReadingPtr;
-    sem_t _waitMesg;
+    Socket* _socket;
 };
 
 }

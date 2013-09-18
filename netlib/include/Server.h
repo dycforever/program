@@ -12,6 +12,7 @@
 #include "Socket.h" 
 #include "Epoller.h"
 #include "EventLoop.h"
+#include "Connection.h"
 
 namespace dyc {
 
@@ -32,8 +33,8 @@ public:
 
     int accepter(Socket* sock, Epoller* poller);
 
-    void setReadCallback(CallbackFunc cb);
-    void setWriteCallback(CallbackFunc cb);
+//    void setReadCallback(CallbackFunc cb);
+//    void setWriteCallback(CallbackFunc cb);
 private:
 
     const InetAddress _listenAddr;

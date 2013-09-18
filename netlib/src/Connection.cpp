@@ -2,166 +2,115 @@
 #include "util.h"
 
 namespace dyc {
-Connection::Connection(int fd) {
-    _sockfd = fd;
-//    peerAddr = ;
+
+Connection::Connection(Socket* socket):_writingTask(NULL), _readingTask(NULL), _processingHead(false), _socket(socket) {
+    _socket->setReadCallback(boost::bind(&recvData, this, _socket));
+    _socket->setWriteCallback(boost::bind(&sendData, this, _socket));
 }
 
-Connection::Connection(int fd, const char* ip, uint16_t port) {
-    peerAddr = InetAddress(ip, port);
-    _sockfd = fd;
-//    peerAddr = ;
-}
-
-int Connection::establish() {
-
-   const struct sockaddr_in& sockAddr = peerAddr.getSockAddrInet();
-   int ret = ::connect(_sockfd, ::sockaddr_cast(&sockAddr), static_cast<socklen_t>(sizeof sockAddr));
-   if (ret < 0) {
-        FATAL("ret:%d bind socket[%d] raw_ip[%s] port[%u] Die errno[%d] with %s", 
-                ret, _sockfd, inet_ntoa(sockAddr.sin_addr), ntohs(sockAddr.sin_port), errno, strerror(errno));
-   }
-   return ret; 
-}
-
-uint64_t writeMesg(SendMesg* mesg) {
-    char* end = NULL;
-    if (mesg->isBody) {
-        end = &head + sizeof(head);
-    } else {
-        end = _data + _length;
+int Connection::recvData(Socket* socket) {
+    int headret = 0;
+    if (_readingTask == NULL) {
+        _readingTask = NEW Task();
     }
-
-BEGIN_SEND:
-    uint64_t left = (uint64_t)(end - ptr);
-    if (left > 0) {
-        uint64_t nwrite = write(_sockfd, mesg->ptr, left);
-        if (nwrite < 0 && errno != EAGAIN) {
-                FATAL("write failed with errno:%d %s", errno, strerror());
-                return (uint64_t)-1;
-        } else {
-            mesg->ptr += nwrite;
-            left -= nwrite;
-        }
-    }
-    if (mesg->isBody) {
-        ptr = _data;
-        end = _data + _length;
-        goto BEGIN_SEND;
-    }
-    return left;
-}
-
-int Connection::writeCallback() {
-    NOTICE("calling write callback");
-    while (_onWrite == NULL) {
-        if (_sendMesgList.size() == 0) {
-            NOTICE("no more need write");
-            return 0;
-        }
-        _onWrite = _sendMesgList.front();
-        _sendMesgList.pop_front();
-
-        uint64_t ret = writeMesg(_onWrite);
-        if (ret == 0) {
-            _onWrite->post();
-            _onWrite = NULL;
-            continue;
-        } else if (ret == (uint64_t)-1) {
-            return -1;
-        }
-        break;
-    }
-    return 1;
-}
-
-
-uint64_t Connection::readMesg(RecvMesg* mesg) {
-
-}
-
-uint64_t Connection::parseHead() {
-    char* end = (char*)&_headHasRead + sizeof(_headHasRead);
-    int leng = end - _headReadingPtr;
-    uint64_t nread = read(_sockfd, _headReadingPtr, length);
-    _headReadingPtr += nread;
-    if (_headReadingPtr == end) {
+    headret = _readingTask->readHead(socket);
+    if(headret == 1) {
         return 0;
+    } else if (headret != 0) {
+        FATAL("read head failed");
+        return -1;
     }
-}
 
-int Connection::readCallback() {
-    if (_isReadingHead) {
-        if (parseHead() == 0) {
-            sem_post(&_waitMesg);
-            _isReadingHead = false;
-        }
+    int bodyret = 0;
+    bodyret = _readingTask->readBody(socket);
+
+    if (bodyret == 0) {
+
+        close fd && delete socket
+
+    } else if(bodyret < 0) {
+        FATAL("read body failed");
+        return -1;
     }
-    if (_onRead == NULL) {
-        if (_recvMesgList.get(_headHasRead) == NULL) {
-            NOTICE("no more need write");
-        }
-        uint64_t ret = 0;
-        ret = readMesg(_onRead);
-        if (ret == 0) {
-            _onRead->post();
-            _onRead = NULL;
-            _isReadingHead = true;
-        }
+    if (_readingTask->over()) {
+        _processingHead = false;
+        // TODO this is read complete callback !!
+        Task* task = createSendTask(_readingTask->_data);
+        DEBUG("push task %p", task->_data);
+        pushWrite(task);
+
+        free _readingTask->_data and data
+        DELETE(_readingTask);
     }
 
     return 0;
 }
 
-// return 0 means the socket can be removed
-int Connection::handle(const epoll_event& event) {
-    int ret = 0;
-    if (event.events & EPOLLIN) {
-        DEBUG("will read callback");
-        ret = readCallback();
-    } else if (event.events & EPOLLOUT) {
-        DEBUG("will write callback");
-        ret = writeCallback();
-    } else {
-        ret = -1;
-        NOTICE("unknow event");
-    }
-    if (ret < 0) {
-        errorCallback();
-    }
-    return ret;
+Task* Connection::createSendTask(char* path) {
+    DEBUG("look for file %s", path);
+    uint64_t len;
+    int ret = getFileSize(path, len);
+    CHECK_ERROR(NULL, ret==0, "get file[%s] size failed", path);
+    // TODO malloc callback
+    char* buf = NEW char[len];
+    FILE* fp = fopen(path, "r");
+    uint64_t hr = fread(buf, 1, len, fp);
+    CHECK_ERROR(NULL, hr==len, "read file[%s] size failed: read %lu", path, hr);
+    DEBUG("read file %lu bytes: %p", hr, buf);
+
+    Task* task = NEW Task(buf, len);
+    return task;
 }
 
-SendMesg* Connection::pushSendTask(
-        int32_t           srcRank,
-        int32_t           destRank,
-        int32_t           tag,
-        const void        *sendBuf,
-        uint32_t          bufferSize) {
-    SendMesg* mesg = NEW SendMesg(srcRank, destRank, tag, sendBuf, bufferSize);
-
-    if (mesg == NULL) {
-        FATAL("new send mesg failed");
-        return NULL;
-    }
-    _sendMesgList.push_back(mesg);
-    return mesg;
+int64_t Connection::send(const char* data, int64_t size) {
+    Task* task = Task(data, size);
+    pushWrite(Task* task);
 }
 
-RecvMesg* Connection::pushRecvTask(
-        int32_t           srcRank,
-        int32_t           destRank,
-        int32_t           tag,
-        const void        *sendBuf,
-        uint32_t          bufferSize) {
-    RecvMesg* mesg = NEW RecvMesg(srcRank, destRank, tag, sendBuf, bufferSize);
+void Connection::pushWrite(Task* task) {
+    MutexLockGuard lock(_listMutex);
+    _writeTasks.push_back(task);
+    _loop->update(task, write);
+}
 
-    if (mesg == NULL) {
-        FATAL("new send mesg failed");
+Task* Connection::getNextTask(list<Task*>& list) {
+    MutexLockGuard lock(_listMutex);
+    if (list.empty()) {
         return NULL;
     }
-    _recvMesgList.push_back(mesg);
-    return mesg;
+    CHECK_ERROR(NULL, !list.empty(), "list is empty");
+    Task* task = list.front();
+    list.pop_front();
+    return task;
+}
+
+void Connection::readTaskComplete() {
+}
+
+int Connection::sendData(Socket* socket) {
+    DEBUG("this time _writingTask:%p", _writingTask);
+    if (_writingTask == NULL) {
+        _writingTask = getNextTask(_writeTasks);
+        if (_writingTask == NULL) {
+            _loop->update(task, no write);
+            return 0;
+        }
+        _wpos = _writingTask->_data;
+        _wlen = _writingTask->_len;
+    }
+    DEBUG("begin to send file");
+    int hasWrite = socket->send(_wpos, _wlen);
+    CHECK_ERRORNO(-1, hasWrite >= 0, "socket[%d] write %p failed", socket->fd(), _wpos);
+
+    _wlen -= hasWrite;
+    _wpos += hasWrite;
+
+    if (_wlen == 0) {
+        // TODO _writeComplete(_writingTask);
+         
+        _writingTask = NULL;
+    }
+    return 0;
 }
 
 }

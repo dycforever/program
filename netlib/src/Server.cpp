@@ -16,19 +16,18 @@ int Server::accepter(Socket* sock, Epoller* poller) {
         return -1;
     }
     Socket* newso = NEW Socket(newfd);
-    newso->setReadCallback(_readCallback);
-    newso->setWriteCallback(_writeCallback);
-    poller->addRW(newso);
+    Connection* conn = NEW Connection(newso);
+    poller->addRead(conn);
     return 0;
 }
 
-void Server::setReadCallback(CallbackFunc cb) {
-    _readCallback = cb;
-}
-
-void Server::setWriteCallback(CallbackFunc cb) {
-    _writeCallback = cb;
-}
+//void Server::setReadCallback(CallbackFunc cb) {
+//    _readCallback = cb;
+//}
+//
+//void Server::setWriteCallback(CallbackFunc cb) {
+//    _writeCallback = cb;
+//}
 
 int Server::start() {
 
