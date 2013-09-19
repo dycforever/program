@@ -9,11 +9,14 @@ VPATH=src
 all: server client
 
 
-server:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o server.cpp
+server:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o server.cpp Task.o 
 	g++ -o server $(CFLAGS) $^ -lpthread -lcommon
 
-client:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o client.cpp
+client:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o client.cpp Task.o 
 	g++ -o client $(CFLAGS) $^ -lpthread -lcommon
+
+Task.o:Task.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 
 Server.o:Server.cpp
 	$(CC) $(CFLAGS) -c $< -o $@

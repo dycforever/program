@@ -52,7 +52,7 @@ int Server::start() {
     ret = _epoller->createEpoll();
     CHECK_ERROR(-1, ret == 0, "create epoller failed");
 
-    CallbackFunc acceptCallback = boost::bind(&Server::accepter, this, _1, _epoller);
+    ConnCallbackFunc acceptCallback = boost::bind(&Server::accepter, this, _1, _epoller);
     _listenSocket->setReadCallback(acceptCallback);
 
     ret = _epoller->addRW(_listenSocket);

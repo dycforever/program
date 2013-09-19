@@ -14,12 +14,14 @@
 #include "Epoller.h"
 #include "EventLoop.h"
 #include "Connection.h"
+#include "Task.h"
 
 namespace dyc {
 
 class Server {
 public:
-    typedef boost::function<int(Socket*)> CallbackFunc;
+    typedef boost::function< SendTask* (RecvTask*) > ReadCallbackFunc;
+    typedef boost::function< int (Socket*) > ConnCallbackFunc;
     typedef Connection* ConnectionPtr;
     Server(const InetAddress& listenAddr);
     ~Server();  
@@ -36,8 +38,7 @@ public:
     int accepter(Socket* sock, Epoller* poller);
     int addConnection(Connection*);
 
-//    void setReadCallback(CallbackFunc cb);
-//    void setWriteCallback(CallbackFunc cb);
+    void setReadCallback(ReadCallbackFunc cb) { _readCallback = cb;}
 private:
 
 //    typedef std::map<InetAddress, Connection*> ConnectionCollections;
@@ -47,9 +48,8 @@ private:
     Epoller* _epoller;
     EventLoop* _loop;
 
-    CallbackFunc _readCallback;
-    CallbackFunc _writeCallback;
-    CallbackFunc _errorCallback;
+    ReadCallbackFunc _readCallback;
+//    CallbackFunc _errorCallback;
     ConnectionCollections _connections;
 };
 

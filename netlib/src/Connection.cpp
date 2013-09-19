@@ -40,33 +40,15 @@ int Connection::recvData(Socket* socket) {
     }
     if (_readingTask->over()) {
         _processingHead = false;
-        // TODO this is read complete callback !!
-        SendTask* task = createSendTask(_readingTask->_data);
-        DEBUG("push task %p", task->_data);
+        // TODO create RecvData and call read complete callback !!
+        SendTask* task = _readCallback(_readingTask);
         pushWrite(task);
         socket->enableWrite();
         _loop->updateSocket(socket);
-        DELETE(_readingTask->_data);
         DELETE(_readingTask);
     }
 
     return 0;
-}
-
-SendTask* Connection::createSendTask(char* path) {
-    DEBUG("look for file %s", path);
-    uint64_t len;
-    int ret = getFileSize(path, len);
-    CHECK_ERROR(NULL, ret==0, "get file[%s] size failed", path);
-    // TODO malloc callback
-    char* buf = NEW char[len];
-    FILE* fp = fopen(path, "r");
-    uint64_t hr = fread(buf, 1, len, fp);
-    CHECK_ERROR(NULL, hr==len, "read file[%s] size failed: read %lu", path, hr);
-    DEBUG("read file %lu bytes: %p", hr, buf);
-
-    SendTask* task = NEW SendTask(buf, len);
-    return task;
 }
 
 int Connection::send(const char* data, int64_t size) {
@@ -109,7 +91,7 @@ int Connection::sendData(Socket* socket) {
         _wpos = _writingTask->_data;
         _wlen = _writingTask->_len;
     }
-    DEBUG("begin to send file");
+    DEBUG("begin to send %p len: %lu", _wpos, _wlen);
     int hasWrite = socket->send(_wpos, _wlen);
     CHECK_ERRORNO(-1, hasWrite >= 0, "socket[%d] write %p failed", socket->fd(), _wpos);
 
@@ -118,7 +100,6 @@ int Connection::sendData(Socket* socket) {
 
     if (_wlen == 0) {
         // TODO _writeComplete(_writingTask);
-         
         _writingTask = NULL;
     }
     return 0;

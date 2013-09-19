@@ -3,6 +3,7 @@
 
 #include <boost/bind.hpp>
 #include "netlib.h"
+#include "Task.h"
 
 using namespace dyc;
 using namespace std;
@@ -38,6 +39,22 @@ int echoWrite(Socket* socket) {
     return 0;
 }
 
+SendTask* createSendTask(RecvTask* task) {
+    char* path = task->getData();
+    DEBUG("look for file %s", path);
+    uint64_t* len = NEW uint64_t;
+    int ret = getFileSize(path, *len);
+    CHECK_ERROR(NULL, ret==0, "get file[%s] size failed", path);
+    char* buf = NEW char[*len];
+    FILE* fp = fopen(path, "r");
+    uint64_t hr = fread(buf, 1, *len, fp);
+    CHECK_ERROR(NULL, hr==*len, "read file[%s] size failed: read %lu", path, hr);
+    DEBUG("read file %lu bytes: %p", hr, buf);
+
+    SendTask* sendtask = NEW SendTask((char*)len, sizeof(*len));
+    return sendtask;
+}
+
 
 int main(int argc, char** argv) {
 //    InetAddress addr("172.17.229.85", 8714);
@@ -47,7 +64,7 @@ int main(int argc, char** argv) {
     }
     InetAddress addr("127.0.0.1", port);
     Server server(addr);
-//    server.setReadCallback(bind(&Connection::recvData, &downloader, _1));
+    server.setReadCallback(bind(&createSendTask, _1));
 //    server.setWriteCallback(bind(&Connection::sendData, &downloader, _1));
     server.start();
 }

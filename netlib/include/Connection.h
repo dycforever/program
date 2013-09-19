@@ -8,6 +8,7 @@
 #include "InetAddress.h"
 #include "Mutex.h"
 #include "Socket.h"
+#include "Task.h"
 
 namespace dyc {
 
@@ -24,87 +25,18 @@ struct MNTLHead {
 };
 
 
-#define AFTER(p) ((char*)p)+sizeof(*p)
-
-class SendTask {
-public:
-    SendTask(const char* data, size_t len):_data(data), _len(len){;}
-    const char* _data;
-    size_t _len;
-
-};
-
-class RecvTask {
-public:
-    bool over() {
-        return _finish;
-    }
-
-    typedef uint64_t Head;
-    RecvTask():_hpos((char*)&_head), _needRead(sizeof(Head)){
-        _data = NULL;
-        _bpos = NULL;
-        _finish = false;
-    }
-
-    char* _data;
-    char* _hpos;
-    char* _bpos;
-
-    Head _head;
-    size_t _needRead;
-    bool _finish;
-
-    int readHead(Socket* socket) {
-        if (_hpos == AFTER(&_head)) {
-            return true;
-        }
-
-        int count = socket->recv(_hpos, _needRead);
-        CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
-        _hpos += count;
-        _needRead -= count;
-
-        if (_needRead == 0) {
-            _data = NEW char[_head];
-            _needRead = _head;
-            _bpos = _data;
-            DEBUG("finish read head %lu", _head);
-        }
-        return count;
-    }
-
-    int readBody (Socket* socket) {
-        int count = 0;
-        if (_bpos != _data + _head) {
-            count = socket->recv(_bpos, _needRead);
-            CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
-            if (count == 0) {
-                WARNING("no body whith head: %lu", _head);
-            }
-            _bpos += count;
-            _needRead -= count;
-            if (_needRead == 0) {
-                _finish = true;
-            }
-        }
-        return count;
-    }
-};
-
-class RecvTask;
-class SendTask;
 class EventLoop;
 
 class Connection {
 public:
+    typedef boost::function< SendTask* (RecvTask*) > CallbackFunc;
     explicit Connection(Socket*, EventLoop*);
     int send(const char* data, int64_t size);
+    void setReadCallback(CallbackFunc cb) { _readCallback = cb;}
 
 private:
     int recvData(Socket* socket);
     int sendData(Socket* socket);
-    SendTask* createSendTask(char* path);
     SendTask* getNextTask(std::list<SendTask*>& list);
     void readTaskComplete();
 
@@ -124,6 +56,7 @@ private:
 
     EventLoop* _loop;
 
+    CallbackFunc _readCallback;
 
     uint64_t _wlen;
     const char* _wpos;
