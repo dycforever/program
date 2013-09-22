@@ -6,8 +6,7 @@ export CFLAGS= -g -pipe -Wall -fPIC -I./include/ -I../common -L../common
 VPATH=src
 
 .PHONY:all
-all: server client
-
+all: server client fileclient fileserver
 
 server:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o server.cpp Task.o 
 	g++ -o server $(CFLAGS) $^ -lpthread -lcommon
@@ -50,6 +49,12 @@ Socket.o:Socket.cpp
 
 ThreadPool.o:ThreadPool.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
+
+fileclient:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o fileinfoClient.cpp Task.o 
+	g++ -o fileclient $(CFLAGS) $^ -lpthread -lcommon
+fileserver:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o fileServer.cpp Task.o 
+	g++ -o fileserver $(CFLAGS) $^ -lpthread -lcommon
+
 
 .PHONY:clean
 clean:

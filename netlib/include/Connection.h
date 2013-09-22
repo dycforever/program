@@ -4,6 +4,7 @@
 #include <list>
 #include <sys/epoll.h>
 #include <semaphore.h>
+#include <boost/shared_ptr.hpp>
 
 #include "InetAddress.h"
 #include "Mutex.h"
@@ -29,22 +30,27 @@ class EventLoop;
 
 class Connection {
 public:
-    typedef boost::function< SendTask* (RecvTask*) > CallbackFunc;
-    explicit Connection(Socket*, EventLoop*);
+//    typedef boost::shared_ptr<Socket> SocketPtr;
+    typedef Socket* SocketPtr;
+    typedef boost::shared_ptr<SendTask> SendTaskPtr;
+    typedef boost::function< SendTaskPtr (RecvTask*) > CallbackFunc;
+
+    explicit Connection(SocketPtr, boost::shared_ptr<EventLoop>);
     int send(const char* data, int64_t size);
+    int rawSend(SendTaskPtr task);
     void setReadCallback(CallbackFunc cb) { _readCallback = cb;}
 
 private:
-    int recvData(Socket* socket);
-    int sendData(Socket* socket);
-    SendTask* getNextTask(std::list<SendTask*>& list);
+    int recvData(SocketPtr socket);
+    int sendData(SocketPtr socket);
+    SendTaskPtr getNextTask(std::list<SendTaskPtr>& list);
     void readTaskComplete();
 
-    int pushWrite(SendTask* task);
+    int pushWrite(SendTaskPtr task);
 
     MutexLock _listMutex;
-    std::list<SendTask*> _writeTasks;
-    SendTask* _writingTask;
+    std::list<SendTaskPtr> _writeTasks;
+    SendTaskPtr _writingTask;
 
     RecvTask* _readingTask;
     char* _rpos;
@@ -52,14 +58,12 @@ private:
 
     InetAddress localAddr;
     InetAddress peerAddr;
-    Socket* _socket;
+    SocketPtr _socket;
 
-    EventLoop* _loop;
+    boost::shared_ptr<EventLoop> _loop;
 
     CallbackFunc _readCallback;
 
-    uint64_t _wlen;
-    const char* _wpos;
 };
 
 }

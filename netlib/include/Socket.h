@@ -23,6 +23,7 @@ public:
     int accept(InetAddress& peeraddr);
     int connect(const InetAddress& localaddr);
     int getEvents() { return _events;}
+    void setEvents(int events) { _events = events;}
 
     int fd() {return _sockfd;}
     int shutdownWrite();

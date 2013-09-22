@@ -4,29 +4,35 @@
 namespace dyc {
 
 Epoller::Epoller() {
+    _timeout = -1;
 }
 
-int Epoller::addRead(Socket* socket) {
+
+void Epoller::setTimeout(int t) {
+    _timeout = t;
+}
+
+int Epoller::addRead(SocketPtr socket) {
     lock();
     int ret = _addEvent(socket, EPOLLIN);
     unlock();
     return ret;
 }
 
-int Epoller::addWrite(Socket* socket) {
+int Epoller::addWrite(SocketPtr socket) {
     lock();
     int ret = _addEvent(socket, EPOLLOUT);
     unlock();
     return ret;
 }
 
-int Epoller::addRW(Socket* socket) {
+int Epoller::addRW(SocketPtr socket) {
     int ret = 0;
     ret = _addEvent(socket, EPOLLIN|EPOLLOUT);
     return ret;
 }
 
-int Epoller::removeEvent(Socket* socket) {
+int Epoller::removeEvent(SocketPtr socket) {
     lock();
     int ret = _removeEvent(socket);
     unlock();
@@ -53,7 +59,7 @@ int Epoller::createEpoll() {
     return 0;
 }
 
-int Epoller::_removeEvent(Socket* socket) {
+int Epoller::_removeEvent(SocketPtr socket) {
     int sockfd = socket->fd();
     int epsfd = _epoll_socket;
     NOTICE("del port in epoll %d", epsfd);
@@ -65,18 +71,18 @@ int Epoller::_removeEvent(Socket* socket) {
     return 0;
 }
 
-int Epoller::_addEvent(Socket* socket, uint32_t op_types) {
+int Epoller::_addEvent(SocketPtr socket, uint32_t op_types) {
     int sockfd = socket->fd();
+    socket->setEvents(op_types);
 
-    struct epoll_event* event = NEW struct epoll_event;
-    event->data.fd = sockfd;
-    event->data.ptr = (void*)socket;
-    event->events = op_types;
+    struct epoll_event event;
+    event.data.ptr = (void*)socket;
+    event.events = op_types;
 
     int epsfd = _epoll_socket;
     const char* ev = op_types==EPOLLIN ? "epoll_in" : "epoll_out";
     NOTICE("add %s port in epoll %d", ev, epsfd);
-    int ret = epoll_ctl(_epoll_socket, EPOLL_CTL_ADD, sockfd, event);
+    int ret = epoll_ctl(_epoll_socket, EPOLL_CTL_ADD, sockfd, &event);
     if( ret < 0 ){
         FATAL("add socket:%d into epoll fd:%d failed errno:%d %s", sockfd, epsfd, errno, strerror(errno));
         return -1;
@@ -85,21 +91,20 @@ int Epoller::_addEvent(Socket* socket, uint32_t op_types) {
 }
 
 int Epoller::poll(Event* list) {
-    NOTICE("epoll wait on %d list:%p size:%d", _epoll_socket, list, 10);
-    int ret = epoll_wait(_epoll_socket, list, 10, -1);
+    NOTICE("epoll wait on socket[%d] size:%d", _epoll_socket, 10);
+    int ret = epoll_wait(_epoll_socket, list, 10, _timeout);
     if (ret < 0) {
-        perror("poll failed:");
+        perror("pll failed:");
     }
     return ret;
 }
 
-int Epoller::updateEvent(Socket* socket) {
+int Epoller::updateEvent(SocketPtr socket) {
     struct epoll_event event;
     int sockfd = socket->fd();
-    event.data.fd = sockfd;
     event.data.ptr = (void*)socket;
     event.events = socket->getEvents();
-    NOTICE("mod in epoll %d", socket->getEvents());
+    NOTICE("mod in epoll with event: %d", socket->getEvents());
     int ret = epoll_ctl(_epoll_socket, EPOLL_CTL_MOD, sockfd, &event);
     if( ret < 0 ){
         FATAL("ctl socket:%d into epoll fd:%d failed errno:%d %s", sockfd, _epoll_socket, errno, strerror(errno));
@@ -108,7 +113,7 @@ int Epoller::updateEvent(Socket* socket) {
     return 0;
 }
 
-//int Epoller::updateEvent(Socket* socket) {
+//int Epoller::updateEvent(SocketPtr socket) {
 //  Poller::assertInLoopThread();
 //  const int stat = socket->stat();
 //  // new 和 deleted状态都表示epoll没有在监听，区别在于map是否建立

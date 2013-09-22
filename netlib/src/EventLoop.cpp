@@ -11,7 +11,7 @@
 namespace dyc {
 __thread EventLoop* t_loopInThisThread = 0;
 
-EventLoop::EventLoop(Epoller* poller)
+EventLoop::EventLoop(boost::shared_ptr<Epoller> poller)
   : looping_(false),
     quit_(false),
     eventHandling_(false),
@@ -57,6 +57,7 @@ void EventLoop::loop()
   
       eventHandling_ = true;
       for(int i = 0; i < nfds; ++i) {
+          // TODO dangerous ?!
           Socket* socket = (Socket*)_active_events[i].data.ptr;
           int fd = socket->fd();
           if (socket == NULL) {
@@ -83,11 +84,11 @@ void EventLoop::quit()
   quit_ = true;
 }
 
-int EventLoop::updateSocket(Socket* socket) {
+int EventLoop::updateSocket(SocketPtr socket) {
     return _poller->updateEvent(socket);
 }
 
-int EventLoop::remove(Socket* socket) {
+int EventLoop::remove(SocketPtr socket) {
     return _poller->removeEvent(socket);
 }
 

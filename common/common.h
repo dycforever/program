@@ -19,6 +19,7 @@
 // C++ header
 #include <string>
 #include <vector>
+#include <map>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
@@ -39,7 +40,6 @@ class DYC_GLOBAL {
 public:
     DYC_GLOBAL() {
         pthread_spin_init(&g_spin_lock, PTHREAD_PROCESS_PRIVATE);
-        std::cout << "lock inited" << std::endl;
     }
     void lock() {
         pthread_spin_lock(&g_spin_lock); 
@@ -51,25 +51,28 @@ public:
 private:
     pthread_spinlock_t g_spin_lock;
 };
+
 extern DYC_GLOBAL dyc_global;
+
+#define LOGOUT stdout
 
 #define DEBUG(format, arguments...) \
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(BLUE); \
-        printf(" [DEBUG]  "); \
+        fprintf(LOGOUT," [DEBUG]  "); \
         UNPRINT_COLOR(); \
-        printf(format"\n", ##arguments);\
-        fflush(stdout);\
+        fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
+        fflush(LOGOUT);\
         dyc_global.unlock(); \
     }while(0)
 
 #define TRACE(format, arguments...) \
     do{ \
         PRINT_COLOR(GREEN); \
-        printf("[TRACE]\t"); \
+        fprintf(LOGOUT,"[TRACE]\t"); \
         UNPRINT_COLOR(); \
-        printf(format"\n", ##arguments);\
+        fprintf(LOGOUT,format"\n", ##arguments);\
         dyc_global.unlock(); \
     }while(0)
 
@@ -77,10 +80,10 @@ extern DYC_GLOBAL dyc_global;
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(GREEN); \
-        printf(" [NOTICE] "); \
+        fprintf(LOGOUT," [NOTICE] "); \
         UNPRINT_COLOR(); \
-        printf(format"\n", ##arguments);\
-        fflush(stdout);\
+        fprintf(LOGOUT,format"\n", ##arguments);\
+        fflush(LOGOUT);\
         dyc_global.unlock(); \
     }while(0)
 
@@ -88,10 +91,10 @@ extern DYC_GLOBAL dyc_global;
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(YELLOW); \
-        printf("[WARNING] "); \
+        fprintf(LOGOUT,"[WARNING] "); \
         UNPRINT_COLOR(); \
-        printf("[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
-        fflush(stdout);\
+        fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
+        fflush(LOGOUT);\
         dyc_global.unlock(); \
     } while(0)
 
@@ -99,10 +102,10 @@ extern DYC_GLOBAL dyc_global;
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(RED); \
-        printf(" [FATAL]  "); \
+        fprintf(LOGOUT," [FATAL]  "); \
         UNPRINT_COLOR(); \
-        printf("[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
-        fflush(stdout);\
+        fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
+        fflush(LOGOUT);\
         dyc_global.unlock(); \
     } while(0)
 
@@ -110,10 +113,10 @@ extern DYC_GLOBAL dyc_global;
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(RED); \
-        printf(" [FATAL]  "); \
+        fprintf(LOGOUT," [FATAL]  "); \
         UNPRINT_COLOR(); \
-        printf("[%d:%s][%s:%d][%s()] " format ,errno ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments, errno, strerror(errno)); \
-        fflush(stdout);\
+        fprintf(LOGOUT,"[%d:%s][%s:%d][%s()] " format ,errno ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments, errno, strerror(errno)); \
+        fflush(LOGOUT);\
         dyc_global.unlock(); \
     } while(0)
 
@@ -140,8 +143,21 @@ extern DYC_GLOBAL dyc_global;
     } \
 } while(0)
 
-// Memory operation define
-#define NEW new (std::nothrow)
+
+typedef struct {
+    void* address;
+    unsigned long size;
+    char file[1024];
+    unsigned long line;
+} ALLOC_INFO;
+
+typedef std::map<void*, ALLOC_INFO*> AllocMap;
+extern AllocMap* dycMemAllocMap;
+
+void dumpUnfreed();
+void addTrack(void* addr, unsigned long asize, const char *fname, unsigned long lnum);
+bool RemoveTrack(void* addr);
+
 
 #define DELETE(pointer) \
     do { \
@@ -355,6 +371,42 @@ public:
 };
 
 }; // namespace dyc 
+
+#define _DEBUG
+
+#ifdef _DEBUG
+
+#define NEW new(__FILE__, __LINE__)
+inline void * operator new(size_t size, const char *file, int line)
+{
+    void *ptr = (void *)malloc(size);
+    dyc::addTrack(ptr, size, file, line);
+    return(ptr);
+}
+
+inline void operator delete(void *p)
+{
+    if (dyc::RemoveTrack(p)) {
+        printf("call free %p\n", p);
+        free(p);
+    }
+}
+inline void * operator new[](size_t size, const char *file, int line)
+{
+    void *ptr = (void *)malloc(size);
+    dyc::addTrack(ptr, size, file, line);
+    return(ptr);
+}
+inline void operator delete[](void *p)
+{
+    if (dyc::RemoveTrack(p)) {
+        printf("call delete[]\n");
+        free(p);
+    }
+}
+#else  // _DEBUG
+#define NEW new(std::nothrow)
+#endif // _DEBUG
 
 #endif // __COMMON_H__
 

@@ -5,7 +5,7 @@
 
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "Mutex.h"
 #include "Epoller.h"
@@ -20,9 +20,10 @@ class EventLoop
 {
  public:
     typedef boost::function<void()> DelayFunctor;
+    typedef Socket* SocketPtr;
     typedef struct epoll_event Event;
 
-    EventLoop(Epoller* );
+    EventLoop( boost::shared_ptr<Epoller> );
     ~EventLoop();  // force out-line dtor, for scoped_ptr members.
 
     void loop();
@@ -34,12 +35,12 @@ class EventLoop
     void queueInLoop(const DelayFunctor& cb);
 
     // internal usage
-    int updateSocket(Socket* Socket);
-    void removeSocket(Socket* Socket);
+    int updateSocket(SocketPtr);
+    void removeSocket(SocketPtr );
 
     bool inThisThread() {return _threadId == pthread_self();}
     static EventLoop* getEventLoopOfCurrentThread();
-    int remove(Socket*);
+    int remove(SocketPtr);
 
 private:
     Event* _active_events;
@@ -47,14 +48,14 @@ private:
 
     void printActiveSockets() const; // DEBUG
 
-    typedef std::vector<Socket*> SocketList;
+    typedef std::vector<SocketPtr> SocketList;
 
     bool looping_; /* atomic */
     bool quit_; /* atomic */
     bool eventHandling_; /* atomic */
     int64_t iteration_;
     pthread_t _threadId;
-    boost::scoped_ptr<Epoller> _poller;
+    boost::shared_ptr<Epoller> _poller;
 
     MutexLock _mutex;
     std::vector<DelayFunctor> _waitQueue;

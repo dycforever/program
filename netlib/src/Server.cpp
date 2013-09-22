@@ -4,10 +4,10 @@
 namespace dyc {
 
 Server::Server(const InetAddress& listen_addr):
-    _listenAddr(listen_addr), _loop(NULL){}
+    _listenAddr(listen_addr) {}
 Server::~Server() {}
 
-int Server::accepter(Socket* sock, Epoller* poller) {
+int Server::accepter(Socket* sock) {
     InetAddress addr;
     int newfd = sock->accept(addr);
     NOTICE("accept a new conn with addr:%s", addr.toIpPort().c_str());
@@ -16,49 +16,53 @@ int Server::accepter(Socket* sock, Epoller* poller) {
         return -1;
     }
     Socket* newso = NEW Socket(newfd);
-    Connection* conn = NEW Connection(newso, _loop);
-    addConnection(conn);
-    poller->addRead(newso);
-    return 0;
+    return (newConnection(newso) != NULL) ? 0 : -1;
 }
 
-
-int Server::addConnection(Connection* conn) {
+Connection* Server::newConnection(Socket* socket) {
+    Connection* conn = NEW Connection(socket, _loop);
+    conn->setReadCallback(_readCallback);
     _connections.insert(conn);
-    return 0;
+    _epoller->addRead(socket);
+    return conn;
 }
 
-//void Server::setReadCallback(CallbackFunc cb) {
-//    _readCallback = cb;
-//}
-//
-//void Server::setWriteCallback(CallbackFunc cb) {
-//    _writeCallback = cb;
-//}
+Connection* Server::connect(const InetAddress& addr) {
+    int sockfd = createBlockingSocket();
+    Socket* socket = NEW Socket(sockfd);
+
+    int ret = socket->connect(addr);
+    assert(ret != -1);
+    return newConnection(socket);
+}
+
+void Server::stop() {
+    _loop->quit();
+}
 
 int Server::start() {
 
     int sockfd = createBlockingSocket();
     assert(sockfd != -1);
 
-    _listenSocket = NEW Socket(sockfd);
+    _listenSocket.reset(NEW Socket(sockfd));
     int ret = _listenSocket->bind(_listenAddr);
     assert(ret != -1);
 
     ret = _listenSocket->listen();
     assert(ret != -1);
 
-    _epoller = NEW Epoller();
+    _epoller.reset(NEW Epoller());
     ret = _epoller->createEpoll();
     CHECK_ERROR(-1, ret == 0, "create epoller failed");
 
-    ConnCallbackFunc acceptCallback = boost::bind(&Server::accepter, this, _1, _epoller);
+    ConnCallbackFunc acceptCallback = boost::bind(&Server::accepter, this, _1);
     _listenSocket->setReadCallback(acceptCallback);
 
-    ret = _epoller->addRW(_listenSocket);
+    ret = _epoller->addRW(_listenSocket.get());
     CHECK_ERROR(-1, ret == 0, "add read write epoller failed");
 
-    _loop = NEW EventLoop(_epoller);
+    _loop.reset(NEW EventLoop(_epoller));
     _loop->loop();
     return 0;
 }

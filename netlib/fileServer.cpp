@@ -42,31 +42,18 @@ int echoWrite(Socket* socket) {
 typedef boost::shared_ptr<SendTask> SendTaskPtr;
 typedef boost::function< SendTaskPtr (RecvTask*) > ReadCallbackFunc;
 
-//SendTaskPtr createSendTask(RecvTask* task) {
-//    char* path = task->getData();
-//    DEBUG("look for file [%s]", path);
-//    uint64_t* len = NEW uint64_t;
-//    int ret = getFileSize(path, *len);
-//    CHECK_ERROR(SendTaskPtr(), ret==0, "get file[%s] size failed", path);
-//    char* buf = NEW char[*len];
-//    FILE* fp = fopen(path, "r");
-//    uint64_t hr = fread(buf, 1, *len, fp);
-//    CHECK_ERROR(SendTaskPtr(), hr==*len, "read file[%s] size failed: read %lu", path, hr);
-//
-//    SendTaskPtr sendtask( NEW SendTask((char*)len, sizeof(*len)) );
-//    return sendtask;
-//}
+SendTaskPtr replyFileSize(RecvTask* task) {
+    char* path = task->getData();
+    DEBUG("look for file [%s]", path);
+    uint64_t* len = NEW uint64_t;
+    int ret = getFileSize(path, *len);
+    CHECK_ERROR(SendTaskPtr(), ret==0, "get file[%s] size failed", path);
 
-SendTaskPtr pingpong(RecvTask* task) {
-    Head head = task->_head;
-    head._type++;
-    char* mesg = task->_data;
-    NOTICE("====get message====");
-    NOTICE("len: %lu   type: %d", head._len, head._type);
-    NOTICE("message: %s", mesg);
-    SendTaskPtr sendtask( NEW SendTask(head, mesg) );
+    Head head(8, 0);
+    SendTaskPtr sendtask( NEW SendTask(head, (char*)len) );
     return sendtask;
 }
+
 
 void* serverRun(void* p) {
     Server* server = (Server*) p;
@@ -82,14 +69,13 @@ int main(int argc, char** argv) {
     }
     InetAddress addr("127.0.0.1", port);
     Server server(addr);
-//    server.setReadCallback(bind(&createSendTask, _1));
-    server.setReadCallback(bind(&pingpong, _1));
+    server.setReadCallback(bind(&replyFileSize, _1));
     pthread_t pid;
     pthread_create(&pid, NULL, serverRun, &server);
     getchar();
     NOTICE("server will quit");
+    dumpUnfreed();
     server.stop();
     pthread_join(pid, NULL);
-    dumpUnfreed();
 }
 

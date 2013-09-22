@@ -8,6 +8,8 @@
 #include <algorithm>
 
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "InetAddress.h" 
 #include "Socket.h" 
@@ -20,7 +22,8 @@ namespace dyc {
 
 class Server {
 public:
-    typedef boost::function< SendTask* (RecvTask*) > ReadCallbackFunc;
+    typedef boost::shared_ptr<SendTask> SendTaskPtr;
+    typedef boost::function< SendTaskPtr (RecvTask*) > ReadCallbackFunc;
     typedef boost::function< int (Socket*) > ConnCallbackFunc;
     typedef Connection* ConnectionPtr;
     Server(const InetAddress& listenAddr);
@@ -29,24 +32,24 @@ public:
     const InetAddress& host_address() const { return _listenAddr; }
 
     int start();
-
-    Socket* new_connection(const InetAddress& peerAddr, uint32_t);
-    Socket* new_connection(const InetAddress& peerAddr);
+    void stop();
 
     void remove_connection(const Socket& conn);
 
-    int accepter(Socket* sock, Epoller* poller);
-    int addConnection(Connection*);
+    int accepter(Socket* sock);
+    Connection* newConnection(Socket*);
 
     void setReadCallback(ReadCallbackFunc cb) { _readCallback = cb;}
+
+    Connection* connect(const InetAddress&);
 private:
 
 //    typedef std::map<InetAddress, Connection*> ConnectionCollections;
     typedef std::set<ConnectionPtr> ConnectionCollections;
     const InetAddress _listenAddr;
-    Socket* _listenSocket;
-    Epoller* _epoller;
-    EventLoop* _loop;
+    boost::shared_ptr<Epoller> _epoller;
+    boost::scoped_ptr<Socket> _listenSocket;
+    boost::shared_ptr<EventLoop> _loop;
 
     ReadCallbackFunc _readCallback;
 //    CallbackFunc _errorCallback;

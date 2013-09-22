@@ -1,40 +1,57 @@
-#include <iostream>
-#include "netlib.h"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+
+#include <iostream>
+#include "netlib.h"
 
 using namespace dyc;
 using namespace boost;
 
 
+typedef boost::shared_ptr<SendTask> SendTaskPtr;
+
+SendTaskPtr pingpong(RecvTask* task) {
+    return SendTaskPtr();
+    Head head = task->_head;
+    char* mesg = task->_data;
+    NOTICE("====get message====");
+    NOTICE("len: %lu   type: %d", head._len, head._type);
+    NOTICE("message: %s", mesg);
+    SendTaskPtr sendtask( NEW SendTask(head, mesg) );
+    return sendtask;
+}
+
+void* serverRun(void* p) {
+    Server* server = (Server*) p;
+    server->start();
+    return NULL;
+}
+
 int main(int argc, char** argv) {
-    int port = 8714;
-//    if (argc > 1) {
-//        port = atoi(argv[1]);
-//    }
-    InetAddress addr("127.0.0.1", port);
-//    InetAddress addr("172.17.229.85", 8714);
-    Client client(addr);
-    const char* file = "/home/dyc/program/netlib/makefile.g";
+    int port = 8715;
     if (argc > 1) {
-        file = argv[1];
+        port = atoi(argv[1]);
     }
+    InetAddress addr("127.0.0.1", port);
+    Server client(addr);
+    client.setReadCallback(bind(&pingpong, _1));
 
-    shared_ptr<Socket> socket;
-    socket.reset(client.connect());
-    uint64_t len = strlen(file);
-    socket->send((char*)&len, sizeof len);
-    int count = socket->send(file, len);
-    NOTICE("send %d bytes over", count);
+    pthread_t pid;
+    pthread_create(&pid, NULL, serverRun, &client);
 
-    char* buf = NEW char[1024 * 1024 * 10];
-    (void)buf;
-    uint64_t fileSize = 0;
+    sleep(1);
+    InetAddress saddr("127.0.0.1", 8714);
+    Connection* conn = client.connect(saddr);
+    const char* mesg = "pingpong";
+    Head head(strlen(mesg), 19871114);
 
-    count = socket->recv((char*)&fileSize, sizeof(fileSize));
+    SendTaskPtr task(NEW SendTask(head, mesg));
+    conn->rawSend(task);
 
-//    int ret = socket->shutdownWrite();
-//    CHECK_ERROR(-1, ret==0, "socket shutdown failed");
-
-    NOTICE("get response: %lu ", fileSize);
+    getchar();
+    client.stop();
+    pthread_join(pid, NULL);
+    dumpUnfreed();
+    return 0;
 }
