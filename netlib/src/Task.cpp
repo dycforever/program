@@ -7,7 +7,12 @@
 namespace dyc {
 
 void printHead(Head* head) {
-    DEBUG("head: len[%lu]  [%d]", head->_len, head->_type);
+//    DEBUG("head: len[%lu]  [%d]", head->_len, head->_type);
+}
+
+
+Head SendTask::getHead() {
+    return _head;
 }
 
 int64_t SendTask::sendHead(SocketPtr socket) {
@@ -77,7 +82,6 @@ int RecvTask::readHead(SocketPtr socket) {
     if (_hpos == AFTER(&_head)) {
         return 0;
     }
-    DEBUG("begin to read head");
 
     int count = socket->recv(_hpos, _needRead);
     CHECK_ERRORNO(-1, count >= 0, "socket[%d] read failed", socket->fd());
@@ -86,13 +90,19 @@ int RecvTask::readHead(SocketPtr socket) {
     _needRead -= count;
 
     if (_needRead == 0) {
+        if (_mallocCallback) {
+            _data = _mallocCallback(_head);
+        } else {
         // +1 for c-string
-        // TODO  mallocCallback
-        _data = NEW char[_head._len + 1];
+            _data = NEW char[_head._len + 1];
+        }
         _needRead = _head._len;
         _bpos = _data;
         DEBUG("finish read head %lu", _head._len);
         printHead(&_head);
+        if (_needRead == 0) {
+            _finish = true;
+        }
     }
     return count;
 }
@@ -109,7 +119,7 @@ int RecvTask::readBody (SocketPtr socket) {
         _bpos += count;
         _needRead -= count;
         if (_needRead == 0) {
-            *_bpos = 0;
+//            *_bpos = 0;
             _finish = true;
         }
     }

@@ -8,16 +8,31 @@
 using namespace dyc;
 using namespace boost;
 
-
 typedef boost::shared_ptr<SendTask> SendTaskPtr;
 
-SendTaskPtr pingpong(RecvTask* task) {
+const int SEND = 1;
+const int RECV = 2;
+const int DATA = 3;
+
+SendTaskPtr simpleMntl(RecvTask* task) {
+    SendTaskPtr sendtask;
     Head head = task->_head;
-    char* mesg = task->_data;
-    NOTICE("====get message====");
-    NOTICE("len: %lu   type: %d", head._len, head._type);
-    NOTICE("message: %s", mesg);
-    SendTaskPtr sendtask( NEW SendTask(head, mesg) );
+    int type = head._type;
+    if (type == SEND) {
+        NOTICE("====get SEND message====");
+        std::cout << "len: " << head._len << "   type: " << head._type << std::endl;       
+    } else if(type == RECV) {
+        NOTICE("====get RECV message====");
+        std::cout << "len: " << head._len << "   type: " << head._type << std::endl;       
+        head._type = DATA;
+        const char* mesg = "hello world";
+        sendtask.reset( NEW SendTask(head, mesg) );
+    } else if(type == DATA) {
+        NOTICE("====get DATA message====");
+        std::cout << "len: " << head._len << "   mesg: " << task->_data<< std::endl;       
+    } else {
+        FATAL("fuck strange message type: %d", type);
+    }
     return sendtask;
 }
 
@@ -34,7 +49,7 @@ int main(int argc, char** argv) {
     }
     InetAddress addr("127.0.0.1", port);
     Server client(addr);
-    client.setReadCallback(bind(&pingpong, _1));
+    client.setReadCallback(bind(&simpleMntl, _1));
 
     pthread_t pid;
     pthread_create(&pid, NULL, serverRun, &client);
@@ -42,8 +57,8 @@ int main(int argc, char** argv) {
     sleep(1);
     InetAddress saddr("127.0.0.1", 8714);
     Connection* conn = client.connect(saddr);
-    const char* mesg = "pingpong";
-    Head head(strlen(mesg), 19871114);
+    const char* mesg = "a";
+    Head head(strlen(mesg), RECV);
 
     SendTaskPtr task(NEW SendTask(head, mesg));
     conn->rawSend(task);

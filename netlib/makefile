@@ -1,18 +1,18 @@
 
 export CPLUS_INCLUDE_PATH=../common
 export CC=g++
-export CFLAGS= -g -pipe -Wall -Werror -fPIC -I./include/ -I../common -L../common
-#export CFLAGS= -g -pipe -Wall -fPIC -I./include/ -I../common -L../common
+#export CFLAGS= -g -pipe -Wall -Werror -fPIC -I./include/ -I../common -L../common
+export CFLAGS= -g -pipe -Wall -fPIC -I./include/ -I../common -L../common
 VPATH=src
 
 .PHONY:all
-all: server client fileclient fileserver
+all: server client
 
 server:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o server.cpp Task.o 
-	g++ -o server $(CFLAGS) $^ -lpthread -lcommon
+	g++ -o $@ $(CFLAGS) $^ -lpthread -lcommon
 
 client:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o client.cpp Task.o 
-	g++ -o client $(CFLAGS) $^ -lpthread -lcommon
+	g++ -o $@ $(CFLAGS) $^ -lpthread -lcommon
 
 Task.o:Task.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -50,13 +50,8 @@ Socket.o:Socket.cpp
 ThreadPool.o:ThreadPool.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-fileclient:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o fileClient.cpp Task.o 
-	g++ -o fileclient $(CFLAGS) $^ -lpthread -lcommon
-fileserver:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o fileServer.cpp Task.o 
-	g++ -o fileserver $(CFLAGS) $^ -lpthread -lcommon
-
 
 .PHONY:clean
 clean:
-	rm -rf src/*.o *.d *.o server client test
+	rm -rf src/*.o *.d *.o {file,}server {file,}client test
 

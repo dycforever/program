@@ -53,7 +53,7 @@ int Epoller::createEpoll() {
     if (sock < 0) {
         return sock;
     }
-    NOTICE("create epoll socket:%d", sock);
+    NOTICE("create epoll socket[%d]", sock);
     _epoll_socket = sock;
 
     return 0;
@@ -81,7 +81,7 @@ int Epoller::_addEvent(SocketPtr socket, uint32_t op_types) {
 
     int epsfd = _epoll_socket;
     const char* ev = op_types==EPOLLIN ? "epoll_in" : "epoll_out";
-    NOTICE("add %s port in epoll %d", ev, epsfd);
+    NOTICE("add [%s] event in epoll socket[%d]", ev, epsfd);
     int ret = epoll_ctl(_epoll_socket, EPOLL_CTL_ADD, sockfd, &event);
     if( ret < 0 ){
         FATAL("add socket:%d into epoll fd:%d failed errno:%d %s", sockfd, epsfd, errno, strerror(errno));

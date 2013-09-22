@@ -15,7 +15,7 @@ public:
     typedef boost::function<int(Socket*)> CallbackFunc;
 
     explicit Socket(int sockfd)
-        : _sockfd(sockfd) { }
+        : _sockfd(sockfd), _connected(false){ }
     ~Socket();
 
     int bind(const InetAddress& localaddr);
@@ -49,6 +49,8 @@ public:
     int send(const char* buf, size_t len);
     int recv(char* buf, size_t len);
 
+    bool isConnected() {return _connected;}
+    bool setConnected(bool stat) {return _connected=stat;}
 private:
     /// On success, returns a non-negative integer that is
     /// a descriptor for the accepted socket, which has been
@@ -67,6 +69,8 @@ private:
 
     int _events;
     int _revents;
+
+    bool _connected;
 };
 
 }

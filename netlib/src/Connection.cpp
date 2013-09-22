@@ -15,30 +15,35 @@ Connection::Connection(SocketPtr socket, boost::shared_ptr<EventLoop> loop): _re
 
 int Connection::recvData(SocketPtr socket) {
     int headret = 0;
+    int bodyret = 0;
     if (_readingTask == NULL) {
         _readingTask = NEW RecvTask();
+        _readingTask->setMallocCallback(_mallocCallback);
     }
     headret = _readingTask->readHead(socket);
     if(headret > 0) {
+        if (_readingTask->over()) {
+            goto recvtask_over;
+        }
         return 0;
-    } else if (headret != 0) {
+    } else if (headret < 0) {
         FATAL("read head failed");
         return -1;
-    } 
+    }
 
-    if (!_readingTask->headFinish()) {
+    DEBUG("headret=%d finish:%d", headret, _readingTask->headFinish());
+    // headret == 0
+    if (!_readingTask->headFinish() ) {
         // TODO close
         _loop->remove(socket);
-//        DELETE(socket);
+        DELETE(socket);
         return 0;
     }
-    // headret == 0
 
-    int bodyret = 0;
     bodyret = _readingTask->readBody(socket);
     DEBUG("read body %d bytes", bodyret);
 
-    if (bodyret == 0) {
+    if (bodyret == 0 && !socket->isConnected()) {
         _loop->remove(socket);
         DELETE(socket);
     } else if(bodyret < 0) {
@@ -46,14 +51,15 @@ int Connection::recvData(SocketPtr socket) {
         return -1;
     }
     if (_readingTask->over()) {
-        // TODO create RecvData and call read complete callback !!
+recvtask_over:
+        NOTICE("here haha");
+        // TODO create RecvData !!
         SendTaskPtr task = _readCallback(_readingTask);
         pushWrite(task);
         socket->enableWrite();
         _loop->updateSocket(socket);
         _readingTask->clear();
     }
-
     return 0;
 }
 
@@ -95,7 +101,6 @@ void Connection::readTaskComplete() {
 }
 
 int Connection::sendData(SocketPtr socket) {
-    DEBUG("_writingTask:%p", _writingTask.get());
     if (!_writingTask) {
         _writingTask = getNextTask(_writeTasks);
         if (!_writingTask) {
@@ -107,11 +112,18 @@ int Connection::sendData(SocketPtr socket) {
     int hasWrite = _writingTask->sendHead(socket);
     CHECK_ERRORNO(-1, hasWrite >= 0, "write socket[%d] failed, ret: %d", socket->fd(), hasWrite);
 
+    if (_writingTask->getHeadLength() == 0) {
+        goto sendtask_over;
+    }
+
     hasWrite = _writingTask->sendBody(socket);
     CHECK_ERRORNO(-1, hasWrite >= 0, "write socket[%d] failed, ret: %d", socket->fd(), hasWrite);
 
     if (_writingTask->over()) {
-        // TODO _writeComplete(_writingTask);
+sendtask_over:
+        if (_writeCallback) {
+            _writeCallback(_writingTask->getHead());
+        }
         _writingTask = getNextTask(_writeTasks);
     }
     return 0;

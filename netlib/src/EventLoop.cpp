@@ -49,7 +49,7 @@ void EventLoop::loop()
       ++iteration_;
   
       int nfds = _poller->poll(_active_events);
-      NOTICE("get %d events", nfds);
+      NOTICE("eventloop detect %d events", nfds);
       if (nfds < 0) {
           FATAL("poll failed: %d", nfds);
           return;
@@ -64,7 +64,7 @@ void EventLoop::loop()
               FATAL("find socket for fd[%d] failed", fd);
           //    continue;
           }
-          NOTICE("handle event in %d", fd);
+          NOTICE("handle event in socket[%d]", fd);
           int ret = socket->handle(_active_events[i]);
           if (ret != 0) {
               WARNING("handle failed");

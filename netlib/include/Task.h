@@ -30,6 +30,8 @@ public:
     int64_t sendBody(SocketPtr);
     bool over() {return _finish;}
     void clear();
+    Head getHead();
+    uint64_t getHeadLength() {return _head._len;}
 
 private:
     Head _head;
@@ -45,6 +47,7 @@ class Socket;
 class RecvTask {
 public:
     typedef Socket* SocketPtr;
+    typedef boost::function<char* (const Head&)> MallocCallbackFunc;
 
     bool over() { return _finish; }
     bool headFinish() { return _hpos == AFTER(&_head); }
@@ -59,6 +62,7 @@ public:
     int readHead(SocketPtr socket);
     int readBody (SocketPtr socket);
 
+    void setMallocCallback(MallocCallbackFunc cb) { _mallocCallback = cb;}
     // TODO add class RecvMesg
 //private:
     Head _head;
@@ -69,6 +73,7 @@ public:
     size_t _needRead;
     bool _finish;
 
+    MallocCallbackFunc _mallocCallback;
     friend class Connection;
 };
 

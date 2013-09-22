@@ -25,6 +25,9 @@ public:
     typedef boost::shared_ptr<SendTask> SendTaskPtr;
     typedef boost::function< SendTaskPtr (RecvTask*) > ReadCallbackFunc;
     typedef boost::function< int (Socket*) > ConnCallbackFunc;
+    typedef boost::function<char* (const Head&)> MallocCallbackFunc;
+    typedef boost::function<int (const Head&)> WriteCallbackFunc;
+
     typedef Connection* ConnectionPtr;
     Server(const InetAddress& listenAddr);
     ~Server();  
@@ -40,6 +43,8 @@ public:
     Connection* newConnection(Socket*);
 
     void setReadCallback(ReadCallbackFunc cb) { _readCallback = cb;}
+    void setWriteCallback(WriteCallbackFunc cb) { _writeCallback = cb;}
+    void setMallocCallback(MallocCallbackFunc cb) { _mallocCallback = cb;}
 
     Connection* connect(const InetAddress&);
 private:
@@ -51,8 +56,11 @@ private:
     boost::scoped_ptr<Socket> _listenSocket;
     boost::shared_ptr<EventLoop> _loop;
 
+    MallocCallbackFunc _mallocCallback;
+    WriteCallbackFunc _writeCallback;
     ReadCallbackFunc _readCallback;
-//    CallbackFunc _errorCallback;
+    ReadCallbackFunc _errorCallback;
+
     ConnectionCollections _connections;
 };
 

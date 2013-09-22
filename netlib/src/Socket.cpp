@@ -24,6 +24,7 @@ int Socket::connect(const InetAddress& peerAddr) {
         FATAL("ret:%d bind socket[%d] raw_ip[%s] port[%u] Die errno[%d] with %s", 
                 ret, _sockfd, inet_ntoa(sockAddr.sin_addr), ntohs(sockAddr.sin_port), errno, strerror(errno));
    }
+   _connected = true;
    return ret;
 }
 
@@ -170,11 +171,21 @@ void Socket::disableWrite() {
 
 
 int Socket::send(const char* buf, size_t len) {
-    return write(_sockfd, buf, len);
+    int count = write(_sockfd, buf, len);
+    if (count <= 0) {
+        WARNING("write return %d, this socket is disconnected", count);
+        _connected = false;
+    }
+    return count;
 }
 
 int Socket::recv(char* buf, size_t len) {
-    return read(_sockfd, buf, len);
+    int count = read(_sockfd, buf, len);
+    if (count <= 0) {
+        WARNING("read return %d, this socket is disconnected", count);
+        _connected = false;
+    }
+    return count;
 }
 
 int Socket::handleError() {
@@ -184,12 +195,10 @@ int Socket::handleError() {
 }
 
 int Socket::handleRead() {
-    DEBUG("call read callback");
     return _readCallback(this);
 }
 
 int Socket::handleWrite() {
-    DEBUG("call write callback");
     return _writeCallback(this);
 }
 

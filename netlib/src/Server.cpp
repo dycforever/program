@@ -16,12 +16,15 @@ int Server::accepter(Socket* sock) {
         return -1;
     }
     Socket* newso = NEW Socket(newfd);
+    newso->setConnected(true);
     return (newConnection(newso) != NULL) ? 0 : -1;
 }
 
 Connection* Server::newConnection(Socket* socket) {
     Connection* conn = NEW Connection(socket, _loop);
     conn->setReadCallback(_readCallback);
+    conn->setWriteCallback(_writeCallback);
+    conn->setMallocCallback(_mallocCallback);
     _connections.insert(conn);
     _epoller->addRead(socket);
     return conn;
