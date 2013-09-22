@@ -7,7 +7,7 @@
 namespace dyc {
 
 void printHead(Head* head) {
-    DEBUG("head: len[%llu]  [%lld]", head->_len, head->_type);
+    DEBUG("head: len[%lu]  [%d]", head->_len, head->_type);
 }
 
 int64_t SendTask::sendHead(SocketPtr socket) {
@@ -28,7 +28,6 @@ int64_t SendTask::sendHead(SocketPtr socket) {
         _bpos = _data;
         DEBUG("finish write head %lu", _head._len);
         printHead(&_head);
-        FATAL("type %p : %d", &_head, _head._type);
     }
     return count;
 }
@@ -36,7 +35,6 @@ int64_t SendTask::sendHead(SocketPtr socket) {
 int64_t SendTask::sendBody(SocketPtr socket) {
     DEBUG("begin to write body");
         printHead(&_head);
-        FATAL("type: %d", _head._type);
     int count = 0;
     if (_bpos != _data + _head._len) {
         count = socket->send(_bpos, _needWrite);
@@ -60,7 +58,7 @@ void SendTask::clear() {
     //
     // RecvTask below
     //
-RecvTask::RecvTask():_hpos((char*)&_head), _needRead(sizeof(_head)), _head(0, 0){
+RecvTask::RecvTask():_head(0ul, 0), _hpos((char*)&_head), _needRead(sizeof(_head)) {
     _data = NULL;
     _bpos = NULL;
     _finish = false;
@@ -69,7 +67,7 @@ RecvTask::RecvTask():_hpos((char*)&_head), _needRead(sizeof(_head)), _head(0, 0)
 int RecvTask::clear() {
     _hpos = ((char*)&_head);
     _needRead = sizeof(_head);
-    _data = NULL;
+    DELETES(_data);
     _bpos = NULL;
     _finish = false;
     return 0;
@@ -89,6 +87,7 @@ int RecvTask::readHead(SocketPtr socket) {
 
     if (_needRead == 0) {
         // +1 for c-string
+        // TODO  mallocCallback
         _data = NEW char[_head._len + 1];
         _needRead = _head._len;
         _bpos = _data;

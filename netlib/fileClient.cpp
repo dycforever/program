@@ -20,12 +20,14 @@ int main(int argc, char** argv) {
         file = argv[1];
     }
 
-    {
     shared_ptr<Socket> socket;
     socket.reset(client.connect());
     uint64_t len = strlen(file);
+    Head head(len, 19871114);
+//    SendTask* stask = NEW SendTask(head, file);
     socket->send((char*)&len, sizeof len);
-    socket->send((char*)&len, sizeof(int));
+    int type = 19871114;
+    socket->send((char*)&type, sizeof(int));
     socket->send(file, len);
     NOTICE("send request:[%s] size:[%lu]", file, len);
 
@@ -36,11 +38,11 @@ int main(int argc, char** argv) {
     socket->recv((char*)&fileSize, sizeof(fileSize));
     socket->recv((char*)&fileSize, 4);
     socket->recv((char*)&fileSize, sizeof(fileSize));
-    NOTICE("socket owner:%d", socket.use_count());
+    NOTICE("socket owner:%ld", socket.use_count());
 
     NOTICE("get response: %lu ", fileSize);
     std::cerr << fileSize << std::endl;
-    }
+
     dumpUnfreed();
     return 0;
 }

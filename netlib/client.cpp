@@ -12,7 +12,6 @@ using namespace boost;
 typedef boost::shared_ptr<SendTask> SendTaskPtr;
 
 SendTaskPtr pingpong(RecvTask* task) {
-    return SendTaskPtr();
     Head head = task->_head;
     char* mesg = task->_data;
     NOTICE("====get message====");

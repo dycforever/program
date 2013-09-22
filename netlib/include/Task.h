@@ -3,24 +3,26 @@
 #define TASK_H
 
 #include <boost/shared_ptr.hpp>
+#include "Socket.h"
 
 namespace dyc {
 
 #define AFTER(p) ((char*)p)+sizeof(*p)
 
-//#pragma pack(push, 1)
-struct Head {
-    uint64_t _len;
-    int64_t _type;
-    Head(uint64_t len, int type):_len(len), _type(type) {}
-};
-//#pragma pack(pop)
+#pragma pack(push, 1)
+    struct Head {
+        uint64_t _len;
+        int _type;
+        int _srcRank;
+        int _destRank;
+        Head(uint64_t len, int type, int src=0, int dest=0):_len(len), _type(type), _srcRank(src), _destRank(dest) {}
+    };
+#pragma pack(pop)
 
 class SendTask {
 public:
     typedef Socket* SocketPtr;
     SendTask(Head head, const char* data):_head(head), _data(data) {
-        FATAL("type: %d", _head._type);
         clear();
     }
 
