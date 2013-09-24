@@ -2,46 +2,97 @@
 #include "netlib.h"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+
+#include "Task.h"
+
 
 using namespace dyc;
 using namespace boost;
 
+typedef boost::shared_ptr<SendTask> SendTaskPtr;
+typedef boost::function< SendTaskPtr (RecvTask*) > ReadCallbackFunc;
+
+int REQ=1;
+int REP=2;
+
+
+SendTaskPtr replyFileSize(RecvTask* task) {
+    Head head = task->getHead();
+    int type = head._type;
+    SendTaskPtr sendtask;
+    if (type == REQ) {
+        char* path = task->getData();
+        DEBUG("look for file [%s]", path);
+        uint64_t len = 0;
+        int ret = getFileSize(path, len);
+        CHECK_ERROR(SendTaskPtr(), ret==0, "get file[%s] size failed", path);
+
+        char* buf = NEW char[len];
+        CHECK_ERROR(SendTaskPtr(), buf!=NULL, "new buffer size[%llu] failed", len);
+        DEBUG("new mem [%p]", buf);
+
+        Head head(len, REP);
+        sendtask.reset(NEW SendTask(head, buf) );
+    } else if(type == REP) {
+        char* mem = task->getData();
+        uint64_t len = task->getHead()._len;
+        DEBUG("received file size[%llu]", len);
+        memset(mem, 0, len);
+        DEBUG("delete mem %p", mem);
+        DELETES(mem);
+    } else {
+        FATAL("invalid type[%d]", type);
+    }
+    return sendtask;
+}
+
+char* newMem(const Head& head) {
+    char* buf = NEW char[head._len];
+    DEBUG("new mem[%p] in malloc callback size[%lu]", buf, head._len);
+    return buf;
+}
+
+int freeMem(SendTaskPtr task) {
+    const char* buf = task->getData();
+    NOTICE("free mem %p", buf);
+    DELETES(buf);
+    return 0;
+}
+
+
+void* serverRun(void* p) {
+    Server* server = (Server*) p;
+    server->start();
+    return NULL;
+}
 
 int main(int argc, char** argv) {
-    int port = 8714;
-//    if (argc > 1) {
-//        port = atoi(argv[1]);
-//    }
+
+    int port = 8715;
+
     InetAddress addr("127.0.0.1", port);
-//    InetAddress addr("172.17.229.85", 8714);
-    Client client(addr);
-    const char* file = "/home/dyc/program/netlib/makefile.g";
-    if (argc > 1) {
-        file = argv[1];
-    }
+    Server client(addr);
 
-    shared_ptr<Socket> socket;
-    socket.reset(client.connect());
-    uint64_t len = strlen(file);
-    Head head(len, 19871114);
-//    SendTask* stask = NEW SendTask(head, file);
-    socket->send((char*)&len, sizeof len);
-    int type = 19871114;
-    socket->send((char*)&type, sizeof(int));
-    socket->send(file, len);
-    NOTICE("send request:[%s] size:[%lu]", file, len);
+    client.setReadCallback(bind(&replyFileSize, _1));
+    client.setWriteCallback(bind(&freeMem, _1));
+    client.setMallocCallback(bind(&newMem, _1));
 
-    char* buf = NEW char[1024 * 1024 * 10];
-    (void)buf;
-    uint64_t fileSize = 0;
+    pthread_t pid;
+    pthread_create(&pid, NULL, serverRun, &client);
 
-    socket->recv((char*)&fileSize, sizeof(fileSize));
-    socket->recv((char*)&fileSize, 4);
-    socket->recv((char*)&fileSize, sizeof(fileSize));
-    NOTICE("socket owner:%ld", socket.use_count());
+    sleep(1);
+    InetAddress saddr("127.0.0.1", 8714);
+    Connection* conn = client.connect(saddr);
+    const char* file = "/home/dyc/program/netlib/examples/makefile";
+    Head head(strlen(file), REQ);
 
-    NOTICE("get response: %lu ", fileSize);
-    std::cerr << fileSize << std::endl;
+    SendTaskPtr task(NEW SendTask(head, file));
+    conn->rawSend(task);
+
+    getchar();
+    client.stop();
+    pthread_join(pid, NULL);
 
     dumpUnfreed();
     return 0;

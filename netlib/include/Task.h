@@ -30,7 +30,8 @@ public:
     int64_t sendBody(SocketPtr);
     bool over() {return _finish;}
     void clear();
-    Head getHead();
+    Head getHead() { return _head;}
+    const char* getData() { return _data; }
     uint64_t getHeadLength() {return _head._len;}
 
 private:
@@ -57,6 +58,7 @@ public:
 //        DELETES(_data);
     }
     char* getData() { return _data; }
+    Head getHead() { return _head;}
     int clear();
 
     int readHead(SocketPtr socket);

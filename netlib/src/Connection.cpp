@@ -52,7 +52,6 @@ int Connection::recvData(SocketPtr socket) {
     }
     if (_readingTask->over()) {
 recvtask_over:
-        NOTICE("here haha");
         // TODO create RecvData !!
         SendTaskPtr task = _readCallback(_readingTask);
         pushWrite(task);
@@ -64,6 +63,9 @@ recvtask_over:
 }
 
 int Connection::rawSend(SendTaskPtr task) {
+    if (!task) {
+        return 0;
+    }
     pushWrite(task);
     _socket->enableWrite();
     _loop->updateSocket(_socket);
@@ -122,7 +124,7 @@ int Connection::sendData(SocketPtr socket) {
     if (_writingTask->over()) {
 sendtask_over:
         if (_writeCallback) {
-            _writeCallback(_writingTask->getHead());
+            _writeCallback(_writingTask);
         }
         _writingTask = getNextTask(_writeTasks);
     }
