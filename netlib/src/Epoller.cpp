@@ -93,9 +93,17 @@ int Epoller::_addEvent(SocketPtr socket, uint32_t op_types) {
 int Epoller::poll(Event* list) {
     NOTICE("epoll wait on socket[%d] size:%d", _epoll_socket, 10);
     int ret = epoll_wait(_epoll_socket, list, 10, _timeout);
-    if (ret < 0) {
-        perror("pll failed:");
+    if (ret > 0) {
+        return ret;
     }
+    switch(errno) {
+        case EINTR:
+        case EAGAIN:
+            return 0;
+        default:
+            WARNING("epoll_wait return %d with errno[%d]", ret, errno);
+            ret = -1;
+    };
     return ret;
 }
 

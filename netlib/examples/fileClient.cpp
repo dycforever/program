@@ -32,13 +32,21 @@ SendTaskPtr replyFileSize(RecvTask* task) {
         CHECK_ERROR(SendTaskPtr(), buf!=NULL, "new buffer size[%lu] failed", len);
         DEBUG("new mem [%p]", buf);
 
+        FILE* fp = fopen(path, "r");
+        ret = fread(buf, 1, len, fp);
+        DEBUG("read %d bytes from file:%s", ret, path);
+        fclose(fp);
+
         Head head(len, REP);
         sendtask.reset(NEW SendTask(head, buf) );
     } else if(type == REP) {
         char* mem = task->getData();
         uint64_t len = task->getHead()._len;
         DEBUG("received file size[%lu]", len);
-        memset(mem, 0, len);
+        FILE* fp = fopen("/home/dyc/output", "w");
+        int ret = fwrite(mem, 1, len, fp);
+        DEBUG("write %d bytes to file", ret);
+        fclose(fp);
         DEBUG("delete mem %p", mem);
         DELETES(mem);
     } else {

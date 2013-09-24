@@ -172,19 +172,36 @@ void Socket::disableWrite() {
 
 int Socket::send(const char* buf, size_t len) {
     int count = write(_sockfd, buf, len);
-    if (count <= 0) {
-        WARNING("write return %d, this socket is disconnected", count);
-        _connected = false;
+write_again:
+    if (count > 0) {
+        return count;
     }
+    switch(errno) {
+        case EINTR:
+        case EAGAIN:
+            goto write_again;
+        default:
+            WARNING("write return %d with errno[%d], this socket is disconnected", count, errno);
+            _connected = false;
+    };
     return count;
 }
 
 int Socket::recv(char* buf, size_t len) {
-    int count = read(_sockfd, buf, len);
-    if (count <= 0) {
-        WARNING("read return %d, this socket is disconnected", count);
-        _connected = false;
+    int count = 0;
+read_again:
+    count = read(_sockfd, buf, len);
+    if (count > 0) {
+        return count;
     }
+    switch(errno) {
+        case EINTR:
+        case EAGAIN:
+            goto read_again;
+        default:
+            WARNING("read return %d with errno[%d], this socket is disconnected", count, errno);
+            _connected = false;
+    };
     return count;
 }
 
