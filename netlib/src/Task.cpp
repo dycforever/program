@@ -10,11 +10,6 @@ void printHead(Head* head) {
 //    DEBUG("head: len[%lu]  [%d]", head->_len, head->_type);
 }
 
-
-Head SendTask::getHead() {
-    return _head;
-}
-
 int64_t SendTask::sendHead(SocketPtr socket) {
     if (_hpos == AFTER(&_head)) {
         return 0;
@@ -31,7 +26,7 @@ int64_t SendTask::sendHead(SocketPtr socket) {
         // +1 for c-string
         _needWrite = _head._len;
         _bpos = _data;
-        DEBUG("finish write head %lu", _head._len);
+        DEBUG("finish write head, head.len[%lu]", _head._len);
         printHead(&_head);
     }
     return count;
@@ -98,7 +93,7 @@ int RecvTask::readHead(SocketPtr socket) {
         }
         _needRead = _head._len;
         _bpos = _data;
-        DEBUG("finish read head %lu", _head._len);
+        DEBUG("finish read head, head.len[%lu]", _head._len);
         printHead(&_head);
         if (_needRead == 0) {
             _finish = true;

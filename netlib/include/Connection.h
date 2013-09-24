@@ -37,7 +37,7 @@ public:
     typedef boost::function< SendTaskPtr (RecvTask*) > ReadCallbackFunc;
     typedef boost::function< int (Socket*) > ConnCallbackFunc;
     typedef boost::function<char* (const Head&)> MallocCallbackFunc;
-    typedef boost::function<int (const Head&)> WriteCallbackFunc;
+    typedef boost::function<int (SendTaskPtr)> WriteCallbackFunc;
 
 
 

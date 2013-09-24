@@ -104,7 +104,8 @@ int Epoller::updateEvent(SocketPtr socket) {
     int sockfd = socket->fd();
     event.data.ptr = (void*)socket;
     event.events = socket->getEvents();
-    NOTICE("mod in epoll with event: %d", socket->getEvents());
+    // TODO: let getEvent readable
+    NOTICE("socket[%d] update event[%d] in epoll", sockfd, socket->getEvents());
     int ret = epoll_ctl(_epoll_socket, EPOLL_CTL_MOD, sockfd, &event);
     if( ret < 0 ){
         FATAL("ctl socket:%d into epoll fd:%d failed errno:%d %s", sockfd, _epoll_socket, errno, strerror(errno));

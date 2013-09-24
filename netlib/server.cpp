@@ -22,7 +22,7 @@ SendTaskPtr simpleMntl(RecvTask* task) {
     int type = head._type;
     if (type == SEND) {
         NOTICE("====get SEND message====");
-        std::cout << "len: " << head._len << "   type: " << head._type << std::endl;       
+        std::cout << "len: " << head._len << "   type: " << head._type << std::endl;
     } else if(type == RECV) {
         NOTICE("====get RECV message====");
         std::cout << "len: " << head._len << "   type: " << head._type << std::endl;       

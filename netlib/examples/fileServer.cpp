@@ -42,16 +42,50 @@ int echoWrite(Socket* socket) {
 typedef boost::shared_ptr<SendTask> SendTaskPtr;
 typedef boost::function< SendTaskPtr (RecvTask*) > ReadCallbackFunc;
 
-SendTaskPtr replyFileSize(RecvTask* task) {
-    char* path = task->getData();
-    DEBUG("look for file [%s]", path);
-    uint64_t* len = NEW uint64_t;
-    int ret = getFileSize(path, *len);
-    CHECK_ERROR(SendTaskPtr(), ret==0, "get file[%s] size failed", path);
+int REQ=1;
+int REP=2;
 
-    Head head(8, 0);
-    SendTaskPtr sendtask( NEW SendTask(head, (char*)len) );
+SendTaskPtr replyFileSize(RecvTask* task) {
+    Head head = task->getHead();
+    int type = head._type;
+    SendTaskPtr sendtask;
+    if (type == REQ) {
+        char* path = task->getData();
+        DEBUG("look for file [%s]", path);
+        uint64_t len = 0;
+        int ret = getFileSize(path, len);
+        CHECK_ERROR(SendTaskPtr(), ret==0, "get file[%s] size failed", path);
+
+        char* buf = NEW char[len];
+        CHECK_ERROR(SendTaskPtr(), buf!=NULL, "new buffer size[%lu] failed", len);
+        DEBUG("new mem [%p]", buf);
+
+        Head head(len, REP);
+        sendtask.reset(NEW SendTask(head, buf) );
+    } else if(type == REP) {
+        char* mem = task->getData();
+        uint64_t len = task->getHead()._len;
+        DEBUG("received file size[%lu]", len);
+        memset(mem, 0, len);
+        DEBUG("delete mem %p", mem);
+        DELETES(mem);
+    } else {
+        FATAL("invalid type[%d]", type);
+    }
     return sendtask;
+}
+
+char* newMem(const Head& head) {
+    char* buf = NEW char[head._len];
+    DEBUG("new mem[%p] in malloc callback size[%lu]", buf, head._len);
+    return buf;
+}
+
+int freeMem(SendTaskPtr task) {
+    const char* buf = task->getData();
+    NOTICE("free mem %p", buf);
+    DELETES(buf);
+    return 0;
 }
 
 
@@ -70,6 +104,8 @@ int main(int argc, char** argv) {
     InetAddress addr("127.0.0.1", port);
     Server server(addr);
     server.setReadCallback(bind(&replyFileSize, _1));
+    server.setWriteCallback(bind(&freeMem, _1));
+    server.setMallocCallback(bind(&newMem, _1));
     pthread_t pid;
     pthread_create(&pid, NULL, serverRun, &server);
     getchar();

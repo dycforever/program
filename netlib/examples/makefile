@@ -23,4 +23,4 @@ fileserver:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o So
 
 .PHONY:clean
 clean:
-	rm -rf ../src/*.o *.d *.o {file,}server {file,}client test
+	rm -rf ../src/*.o *.d *.o fileclient fileserver pingpongClient pingpongServer

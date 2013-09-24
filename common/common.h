@@ -391,12 +391,14 @@ inline void operator delete(void *p)
         free(p);
     }
 }
+
 inline void * operator new[](size_t size, const char *file, int line)
 {
     void *ptr = (void *)malloc(size);
     dyc::addTrack(ptr, size, file, line);
     return(ptr);
 }
+
 inline void operator delete[](void *p)
 {
     if (dyc::RemoveTrack(p)) {
