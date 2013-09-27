@@ -1,6 +1,5 @@
 #include "Header.h"
 
-
 int Header::check(int fd) {
     char hh[5];
     bool is32;
@@ -14,7 +13,7 @@ int Header::check(int fd) {
     }
 
     // TODO
-    seek fd !
+    lseek(fd, 0, SEEK_SET);
 
     if (is32) {
         Elf32_Ehdr head;
@@ -24,6 +23,16 @@ int Header::check(int fd) {
     Elf64_Ehdr head;
     read(fd, (char*)&head, sizeof(head));
     return memcmp(_header, (char*)&head, sizeof(head));
+}
+
+Header(Elf32_Ehdr* header) {
+    _header = header;
+    _is32 = true;
+}
+
+Header(Elf32_Ehdr* header) {
+    _header64 = header;
+    _is32 = false;
 }
 
 std::string Header::getTypeStr() {

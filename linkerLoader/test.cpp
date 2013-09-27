@@ -50,7 +50,6 @@ int check(int fd, Elf32_Ehdr* _header) {
 }
 
 int main() {
-
     elf_version(EV_CURRENT);
     string fileName("a.out");
     int fd = open(fileName.c_str(), O_RDONLY);

@@ -69,7 +69,7 @@ public:
     Header* getHeader();
 
 private:
-    uint64_t _rawFileSize;
+    size_t _rawFileSize;
     char* _rawFile;
     Elf* _elf;
     Header* _header;
@@ -86,16 +86,17 @@ int Inspector::inspect(const string& fileName) {
     _elf = elf_begin(fd, ELF_C_READ, NULL);
     CHECK_ERROR(-1, _elf != NULL, "elf_begin failed %d %s", elf_errno(), elf_errmsg(elf_errno()));
 
-    Elf32_Ehdr* elf_header = elf32_getehdr(_elf);
-    CHECK_ERROR(-1, elf_header != NULL, "get elf header failed");
+//    Elf32_Ehdr* elf_header = elf32_getehdr(_elf);
+    Elf64_Ehdr* elf_header = elf64_getehdr(_elf);
+    CHECK_ERROR(-1, elf_header != NULL, "get elf header from %s failed %d %s", fileName.c_str(), elf_errno(), elf_errmsg(elf_errno()));
     _header = NEW Header(elf_header);
 
     int ret = getFileSize(fileName.c_str(), _rawFileSize);
     CHECK_ERROR(-1, ret == 0, "get file size failed");
     _rawFile = NEW char[_rawFileSize];
-    CHECK_ERROR(-1, _rawFile != NULL, "new _rawFile failed, size: %llu", _rawFileSize);
-    uint64_t uret = read(fd, _rawFile, _rawFileSize);
-    CHECK_ERROR(-1, uret == _rawFileSize, "read _rawFile failed, read: %llu != %llu", uret, _rawFileSize);
+    CHECK_ERROR(-1, _rawFile != NULL, "new _rawFile failed, size: %lu", _rawFileSize);
+    size_t uret = read(fd, _rawFile, _rawFileSize);
+    CHECK_ERROR(-1, uret == _rawFileSize, "read _rawFile failed, read: %lu != %lu", uret, _rawFileSize);
     
     for (unsigned int i=0; i<_header->getPhnum(); ++i) {
         GElf_Phdr* phdr = NEW GElf_Phdr();

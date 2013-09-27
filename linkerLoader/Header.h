@@ -28,7 +28,8 @@
 
 class Header {
 public:
-    Header(Elf32_Ehdr* header) {_header = header;}
+    Header(Elf32_Ehdr* header);
+    Header(Elf64_Ehdr* header);
     uint32_t getType() {return _header->e_type;}
     std::string getTypeStr();
 
@@ -56,7 +57,9 @@ public:
     int check(int fd);
 
 private:
-    Elf32_Ehdr* _header;
+    Elf64_Ehdr* _header64;
+    Elf32_Ehdr* _header32;
+    bool _is32;
 };
 
 #endif //__HEADER_H__

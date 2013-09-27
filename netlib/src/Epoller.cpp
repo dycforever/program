@@ -92,8 +92,8 @@ int Epoller::_addEvent(SocketPtr socket, uint32_t op_types) {
 
 int Epoller::poll(Event* list) {
     NOTICE("epoll wait on socket[%d] size:%d", _epoll_socket, 10);
-    int ret = epoll_wait(_epoll_socket, list, 10, _timeout);
-    if (ret > 0) {
+    int ret = epoll_wait(_epoll_socket, list, EPOLL_MAX_LISTEN_NUMBER, _timeout);
+    if (ret >= 0) {
         return ret;
     }
     switch(errno) {

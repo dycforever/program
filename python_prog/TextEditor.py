@@ -113,6 +113,11 @@ class TextViewWindow(Gtk.Window):
         self.tag_found = self.textbuffer.create_tag("found",
                 background="yellow")
 
+        iter_start = self.textbuffer.get_start_iter()
+#        iter_end = iter_start.forward_chars(10)
+        iter_end = self.textbuffer.get_end_iter()
+        self.textbuffer.apply_tag(self.tag_found, iter_start, iter_end);
+
     def create_buttons(self):
         check_editable = Gtk.CheckButton("Editable")
         check_editable.set_active(True)

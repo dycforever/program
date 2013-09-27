@@ -171,8 +171,8 @@ void Socket::disableWrite() {
 
 
 int Socket::send(const char* buf, size_t len) {
-    int count = write(_sockfd, buf, len);
 write_again:
+    int count = write(_sockfd, buf, len);
     if (count > 0) {
         return count;
     }
@@ -194,6 +194,8 @@ read_again:
     if (count > 0) {
         return count;
     }
+    if (count == 0)
+        return 0;
     switch(errno) {
         case EINTR:
         case EAGAIN:
