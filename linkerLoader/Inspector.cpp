@@ -49,13 +49,13 @@ void printElf32_Shdr (Elf32_Shdr* shdr) {
     << "entsize: " << shdr->sh_entsize << endl;
 }
 
-int checkSectionHead(int fd) {
-    return 0;
-}
-
-int checkProgramHead(int fd) {
-    return 0;
-}
+//int checkSectionHead(int fd) {
+//    return 0;
+//}
+//
+//int checkProgramHead(int fd) {
+//    return 0;
+//}
 
 void dumpMem(string out, char* buf, size_t size) {
     FILE* fpout = fopen(out.c_str(), "w");
@@ -115,10 +115,10 @@ int Inspector::inspect(const string& fileName) {
             FATAL("get shdr failed");
             break;
         }
-        printElf32_Shdr((Elf32_Shdr*)(_rawFile+0x130+40));
-        printGElf_Shdr((GElf_Shdr*)shdr);
-        dumpMem("mem.out", (char*)shdr, sizeof(*shdr));
-        break;
+//        printElf32_Shdr((Elf32_Shdr*)(_rawFile+0x130+40));
+//        printGElf_Shdr((GElf_Shdr*)shdr);
+//        dumpMem("mem.out", (char*)shdr, sizeof(*shdr));
+//        break;
         SectionHeader* shentry = NEW SectionHeader(shdr, _rawFile);
 //        cout << "\n\n section head " << i << endl;
 //        shentry->showInfo();
@@ -152,7 +152,11 @@ int main (int argc, char** argv) {
 
     Header* header = inspector.getHeader();
     assert(header != NULL);
-    header->showInfo();
+//    header->showInfo();
+
+    int fd = open(file.c_str(), O_RDONLY);
+    CHECK_ERROR(-1, fd>0, "open file %s failed", file.c_str());
+    ret = header->check(fd);
     
-    NOTICE("run success");
+    NOTICE("run success %d", ret);
 }

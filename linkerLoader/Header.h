@@ -5,6 +5,7 @@
 #include <libelf.h>
 #include <gelf.h>
 
+#include "common.h"
 
 //      typedef struct
 //      {
@@ -51,6 +52,8 @@ public:
     uint32_t getShstrndx(){return _header->e_shstrndx;} 
     void showInfo();
     void parseMagic();
+
+    int check(int fd);
 
 private:
     Elf32_Ehdr* _header;

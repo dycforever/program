@@ -1,5 +1,31 @@
 #include "Header.h"
 
+
+int Header::check(int fd) {
+    char hh[5];
+    bool is32;
+    read(fd, hh, 5);
+    if (hh[4] == 1) {
+        is32= true;
+    } else if (hh[4] == 2) {
+        is32= false;
+    } else {
+        return -1;
+    }
+
+    // TODO
+    seek fd !
+
+    if (is32) {
+        Elf32_Ehdr head;
+        read(fd, (char*)&head, sizeof(head));
+        return memcmp(_header, (char*)&head, sizeof(head));
+    }
+    Elf64_Ehdr head;
+    read(fd, (char*)&head, sizeof(head));
+    return memcmp(_header, (char*)&head, sizeof(head));
+}
+
 std::string Header::getTypeStr() {
     if (_header->e_type == ET_REL)
         return "[rel/obj file]";
