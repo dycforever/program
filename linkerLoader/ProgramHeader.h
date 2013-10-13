@@ -18,23 +18,58 @@
 //      Elf32_Word	p_flags;		/* Segment flags */
 //      Elf32_Word	p_align;		/* Segment alignment */
 //    } Elf32_Phdr;
+
+template <class ELF_PHDR>
 class ProgramHeader {
 public:
-    ProgramHeader(GElf_Phdr* phentry):_phentry(phentry){}
-    uint32_t getType() { return _phentry->p_type; }
+    ProgramHeader(ELF_PHDR* phentry):_phentry(phentry){}
+    uint64_t getType() { return _phentry->p_type; }
     std::string getTypeStr();
-    uint32_t getOffset(){ return _phentry->p_offset; }
-    uint32_t getVaddr(){ return _phentry->p_vaddr; }
-    uint32_t getPaddr(){ return _phentry->p_paddr; }
-    uint32_t getFilesz(){ return _phentry->p_filesz; }
-    uint32_t getMemsz(){ return _phentry->p_memsz; }
-    uint32_t getFlags(){ return _phentry->p_flags; }
+    uint64_t getOffset(){ return _phentry->p_offset; }
+    uint64_t getVaddr(){ return _phentry->p_vaddr; }
+    uint64_t getPaddr(){ return _phentry->p_paddr; }
+    uint64_t getFilesz(){ return _phentry->p_filesz; }
+    uint64_t getMemsz(){ return _phentry->p_memsz; }
+    uint64_t getFlags(){ return _phentry->p_flags; }
     std::string getFlagsStr();
-    uint32_t getAlign(){ return _phentry->p_align; }
+    uint64_t getAlign(){ return _phentry->p_align; }
     void showInfo();
 private:
-    GElf_Phdr* _phentry;
+    ELF_PHDR* _phentry;
 };
+
+template <class ELF_PHDR>
+void ProgramHeader<ELF_PHDR>::showInfo() {
+    std::cout << "type: " << getType() << "  type: " << getTypeStr() << std::endl 
+         << "vaddr: " << std::hex << "0x" << getVaddr() << std::endl 
+         << "paddr: " << std::hex << "0x" << getPaddr() << std::endl 
+         << "filesz: " << std::dec << getFilesz() << std::endl 
+         << "memsz: " << std::dec << getMemsz() << std::endl 
+         << "flags: " << getFlags() << "  " << getFlagsStr() << std::endl 
+         << "align: " << getAlign() << std::endl;
+}
+
+template <class ELF_PHDR>
+std::string ProgramHeader<ELF_PHDR>::getFlagsStr() {
+    return "";
+}
+
+template <class ELF_PHDR>
+std::string ProgramHeader<ELF_PHDR>::getTypeStr() {
+    std::string s;
+#define C(V) case PT_##V: s = #V; break
+        switch (getType()) {
+            C(NULL);        C(LOAD);        C(DYNAMIC);
+            C(INTERP);      C(NOTE);        C(SHLIB);
+            C(PHDR);        C(TLS);         
+            C(SUNWBSS);     C(SUNWSTACK);   
+            default:
+            s = "unknown";
+            break;
+        }
+#undef  C
+        return s;
+}
 
 
 #endif //__PROGRAMHEADER_H__
