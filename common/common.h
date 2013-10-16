@@ -9,6 +9,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 // Linux C header
 #include <sys/time.h>

@@ -93,7 +93,7 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
     CHECK_ERROR(-1, elf_header != NULL, "get elf header from %s failed %d %s", fileName.c_str(), elf_errno(), elf_errmsg(elf_errno()));
     _header = createHeader(elf_header);
 	saveFile.open("mid.out", std::ios::out | std::ios::trunc | std::ios::binary);
-    CHECK_ERROR(-1, saveFile, "open file mid.out failed");
+    CHECK_ERROR(-1, !saveFile.fail(), "open file mid.out failed");
 
 	{
 	mesg::HeaderMesg* mes = changeToHeaderMesg(_header);
@@ -159,6 +159,7 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
 //        WARNING("i %d != shnum %u", i, _header->getShnum());
 //    }
 
+    saveFile.close();
     return 0;
 }
 
