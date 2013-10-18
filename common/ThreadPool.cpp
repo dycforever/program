@@ -92,7 +92,7 @@ ThreadPool::~ThreadPool()
 // release all resource 
 int ThreadPool::destroy()
 {
-    NOTICE("will destroy thread pool: %ld, busy count:%d", _waiting_tasks.size(), _busy_count);
+    NOTICE("will destroy thread pool: %lu, busy count:%d", _waiting_tasks.size(), _busy_count);
     int error = 0;
     void* thread_ret = NULL;
     _stop = true;

@@ -9,8 +9,6 @@
 
 #include "utility.h"
 
-#include "mesg.pb.h"
-
 
 namespace dyc {
 
@@ -95,13 +93,8 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
 	saveFile.open("mid.out", std::ios::out | std::ios::trunc | std::ios::binary);
     CHECK_ERROR(-1, !saveFile.fail(), "open file mid.out failed");
 
-	{
 	mesg::HeaderMesg* mes = changeToHeaderMesg(_header);
-	if (!mes->SerializeToOstream(&saveFile)) {
-		std::cerr << "Failed to write elf header." << std::endl;
-		return -1;
-	}
-	}
+
 
     int ret = getFileSize(fileName.c_str(), _rawFileSize);
     CHECK_ERROR(-1, ret == 0, "get file size failed");
@@ -110,31 +103,34 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
     uint64_t uret = read(fd, _rawFile, _rawFileSize);
     CHECK_ERROR(-1, uret == _rawFileSize, "read _rawFile failed, read: %llu != %llu", uret, _rawFileSize);
     
-//	fstream output("message.out", ios::out | ios::app | ios::binary);
     for (unsigned int i=0; i<_header->getPhnum(); ++i) {
 //        ProgramHeaderType* phdr = NEW GElf_Phdr();
         ProgramHeaderType* phdr = getphdr(_header, i);
 //        gelf_getphdr(_elf, i, phdr);
         ProgramHeader<ProgramHeaderType>* phentry = NEW ProgramHeader<ProgramHeaderType>(phdr);
 
-		mesg::ProgHeaderMesg* mes = changeToProgMesg(phentry);
-		if (!mes->SerializeToOstream(&saveFile)) {
-			std::cerr << "Failed to write address book." << std::endl;
-			return -1;
-		}
+		mesg::HeaderMesg_ProgHeaderMesg* pmes = mes->add_progheaders();
+		changeToProgMesg(phentry, pmes);
 
-        std::cout << "\n\n program head " << i << std::endl;
-        phentry->showInfo();
+//        std::cout << "\n\n program head " << i << std::endl;
+//        phentry->showInfo();
         phentrys.push_back(phentry);
     }
 
     for (unsigned int i=0; i<_header->getShnum(); ++i) {
         SectionHeaderType* shdr = getshdr(_header, i);
         SectionHeader<SectionHeaderType>* shentry = NEW SectionHeader<SectionHeaderType>(shdr, _rawFile);
+		mesg::HeaderMesg_SecHeaderMesg* smes = mes->add_secheaders();
 //        std::cout << "\n\n section head " << i << std::endl;
 //        shentry->showInfo();
+		changeToSecMesg(shentry, smes);
         shentrys.push_back(shentry);
     }
+
+	if (!mes->SerializeToOstream(&saveFile)) {
+		std::cerr << "Failed to write elf header." << std::endl;
+		return -1;
+	}
 
 //    Elf_Scn* scn = NULL; 
 //    int i = 0;

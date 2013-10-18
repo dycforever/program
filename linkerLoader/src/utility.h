@@ -2,7 +2,7 @@
 #ifndef __UTILITY_H__
 #define __UTILITY_H__
 
-#include "mesg.pb.h"
+#include "messages/mesg.pb.h"
 
 namespace dyc {
 
@@ -30,8 +30,7 @@ mesg::HeaderMesg* changeToHeaderMesg (Header* header) {
 }
 
 template <class SecHeader>
-mesg::SecHeaderMesg* changeToSecMesg (SecHeader* header) {
-	mesg::SecHeaderMesg* mesg = new mesg::SecHeaderMesg();
+mesg::HeaderMesg_SecHeaderMesg* changeToSecMesg (SecHeader* header, mesg::HeaderMesg_SecHeaderMesg* mesg) {
 
 	mesg->set_name(header->getName());
 	mesg->set_type(header->getType());
@@ -43,14 +42,14 @@ mesg::SecHeaderMesg* changeToSecMesg (SecHeader* header) {
 	mesg->set_link(header->getLink());
 	mesg->set_info(header->getInfo());
 	mesg->set_addralign(header->getAddralign());
-	mesg->set_entsize(header->Entsize());
+	mesg->set_entsize(header->getEntsize());
 
 	return mesg;
 }
 
 template <class ProgramHeader>
-mesg::ProgHeaderMesg* changeToProgMesg (ProgramHeader* header) {
-	mesg::ProgHeaderMesg* mesg = new mesg::ProgHeaderMesg();
+mesg::HeaderMesg_ProgHeaderMesg* changeToProgMesg (ProgramHeader* header, mesg::HeaderMesg_ProgHeaderMesg* mesg) {
+
 	mesg->set_type(header->getType());
 	mesg->set_offset(header->getOffset());
 	mesg->set_vaddr(header->getVaddr());

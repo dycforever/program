@@ -6,7 +6,7 @@
 #include "common.h"
 #include "Header.h"
 
-#include "mesg.pb.h"
+#include "messages/mesg.pb.h"
 
 using namespace dyc;
 using namespace std;
@@ -18,7 +18,7 @@ int main() {
 	while (1)
 	{
 		count++;
-		mesg::ProgHeaderMesg mes;
+		mesg::HeaderMesg_ProgHeaderMesg mes;
 		if (!mes.ParseFromIstream(&input)) {
 			cerr << "Failed to parse " << count << "." << endl;
 			return -1;

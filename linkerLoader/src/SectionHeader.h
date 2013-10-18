@@ -24,7 +24,7 @@ template <class ELF_SHDR>
 class SectionHeader {
 public:
     SectionHeader(ELF_SHDR* shentry, char* strtbl):_shentry(shentry), _strtbl(strtbl){}
-    uint64_t getName();
+    uint64_t getName() { return _shentry->sh_name; }
     uint64_t getType() { return _shentry->sh_type; }
     std::string getTypeStr();
     uint64_t getFlags(){ return _shentry->sh_flags; }

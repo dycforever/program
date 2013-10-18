@@ -163,7 +163,7 @@ bool RemoveTrack(void* addr);
 #define DELETE(pointer) \
     do { \
         if ((pointer) != NULL) { \
-            delete (pointer); \
+            operator delete ((pointer), 0); \
             (pointer) = NULL; \
         } \
     } while (0)
@@ -171,7 +171,7 @@ bool RemoveTrack(void* addr);
 #define DELETES(pointer) \
     do { \
         if ((pointer) != NULL) { \
-            delete[] (pointer); \
+            operator delete[] ((pointer), 0); \
             (pointer) = NULL; \
         } \
     } while (0)
@@ -385,10 +385,10 @@ inline void * operator new(size_t size, const char *file, int line)
     return(ptr);
 }
 
-inline void operator delete(void *p)
+inline void operator delete(void *p, int)
 {
     if (dyc::RemoveTrack(p)) {
-        printf("call free %p\n", p);
+//        printf("call free %p\n", p);
         free(p);
     }
 }
@@ -400,10 +400,10 @@ inline void * operator new[](size_t size, const char *file, int line)
     return(ptr);
 }
 
-inline void operator delete[](void *p)
+inline void operator delete[](void *p, int)
 {
     if (dyc::RemoveTrack(p)) {
-        printf("call delete[]\n");
+//        printf("call delete[]\n");
         free(p);
     }
 }

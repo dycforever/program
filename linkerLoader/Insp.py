@@ -9,6 +9,8 @@ import os
 import subprocess
 from gi.repository import Gtk, Pango
 
+print("python path: %s" % (sys.path))
+import mesg_pb2
 
 class PosTransfer:
     def __init__(self, textbuffer):
@@ -70,10 +72,14 @@ class PosTransfer:
         
 
     
-    
-    
 
 class InspectorMainWin(Gtk.Window):
+    def loadmesg(self):
+        self.mesg = mesg_pb2.HeaderMesg()
+        f = open("mid.out", "rb")
+        self.mesg.ParseFromString(f.read())
+        f.close()
+
     def __init__(self, filename):
         Gtk.Window.__init__(self, title="Inspector")
 #        self.set_default_geometry(400, 400);
@@ -104,21 +110,25 @@ class InspectorMainWin(Gtk.Window):
 #        attach的单位很奇怪，不是像素点
         grid.attach(button2, 0, 0, 2, 1)
 
-
-        cmd = "readelf -h "+ filename + " | head -2"
-        headContent = subprocess.check_output(cmd, shell=True)
-        label = Gtk.Label(headContent.decode("ascii"))
-        grid.attach_next_to(label, scrolledwindow, Gtk.PositionType.RIGHT, 1, 2)
-        
-        head_tag = self.textbuffer.create_tag("elf head", foreground = "red")
-        iter_start = self.textbuffer.get_start_iter()
-
+        self.loadmesg()
+        self.head_tag = self.textbuffer.create_tag("elf head", foreground = "red")
+        self.sechead_tag = self.textbuffer.create_tag("section head", foreground = "blue")
+        self.proghead_tag = self.textbuffer.create_tag("program head", foreground = "green")
         self.transfer = PosTransfer(self.textbuffer)
-        iters = self.transfer.trans(34, 156)
+
+#        cmd = "readelf -h "+ filename + " | head -2"
+#        headContent = subprocess.check_output(cmd, shell=True)
+#        label = Gtk.Label(headContent.decode("ascii"))
+#        grid.attach_next_to(label, scrolledwindow, Gtk.PositionType.RIGHT, 1, 2)
         
-        for it in iters:
+        iterlist = self.transfer.trans(0, self.mesg.ehsize)
+        for it in iterlist:
             print("apply tag %s" %(it.__str__()))
-            self.textbuffer.apply_tag(head_tag, it[0], it[1])
+            self.textbuffer.apply_tag(self.head_tag, it[0], it[1])
+
+#TODO: how to iterate array in mesg
+#        for pheader in self.mesg.ProgHeaderMesg:
+#            print("this is pheader: %s " %(pheader.__str__()))
         
 if __name__ == '__main__':
     if (len(sys.argv)<2):

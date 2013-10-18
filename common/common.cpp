@@ -48,7 +48,7 @@ void dumpUnfreed()
 
     for(iter = dycMemAllocMap->begin(); iter != dycMemAllocMap->end(); iter++)
     {
-        printf("%-50s: LINE %lu, ADDRESS 0x%lx size %lu unfreed\n", iter->second->file, iter->second->line
+        printf("%-50s: LINE %lu, ADDRESS 0x%p size %lu unfreed\n", iter->second->file, iter->second->line
                 , iter->second->address, iter->second->size);
         totalSize += iter->second->size;
         info = iter->second;
