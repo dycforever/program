@@ -16,32 +16,38 @@ message HeaderMesg {
     required uint64 shnum = 12; 
     required uint64 shstrndx = 13; 
 
-	message SecHeaderMesg {
-	    required uint64 name = 1;
-	    required uint64 type = 2;
-	    required uint64 flags = 3; 
-	    required uint64 addr = 4; 
-	    required uint64 offset = 5; 
-	    required uint64 size = 6;
-	
-	    required uint64 link = 7; 
-	    required uint64 info = 8; 
-	    required uint64 addralign = 9;
-	    required uint64 entsize = 10;
-	}
-	
-	message ProgHeaderMesg {
-	    required uint64 type = 1;
-	    required uint64 offset = 2;
-	    required uint64 vaddr = 3; 
-	    required uint64 paddr = 4; 
-	    required uint64 filesz = 5;
-	    required uint64 memsz = 6; 
-	    required uint64 flags = 7; 
-	    required uint64 align = 8;
-	}
+    message SecHeaderMesg {
+        required uint64 name = 1;
+        required uint64 type = 2;
+        required uint64 flags = 3; 
+        required uint64 addr = 4; 
+        required uint64 offset = 5; 
+        required uint64 size = 6;
+    
+        required uint64 link = 7; 
+        required uint64 info = 8; 
+        required uint64 addralign = 9;
+        required uint64 entsize = 10;
 
-	repeated SecHeaderMesg secHeaders = 14;
-	repeated ProgHeaderMesg progHeaders = 15;
+		required uint64 begin = 11;
+		required uint64 end = 12;
+    }
+    
+    message ProgHeaderMesg {
+        required uint64 type = 1;
+        required uint64 offset = 2;
+        required uint64 vaddr = 3; 
+        required uint64 paddr = 4; 
+        required uint64 filesz = 5;
+        required uint64 memsz = 6; 
+        required uint64 flags = 7; 
+        required uint64 align = 8;
+
+		required uint64 begin = 9;
+		required uint64 end = 10;
+    }
+
+    repeated SecHeaderMesg secHeaders = 14;
+    repeated ProgHeaderMesg progHeaders = 15;
 }
 

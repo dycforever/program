@@ -114,6 +114,8 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
 
 //        std::cout << "\n\n program head " << i << std::endl;
 //        phentry->showInfo();
+		pmes->set_begin(_header->getPhoff() + i* sizeof(ProgramHeaderType));
+		pmes->set_end(pmes->begin() + sizeof(ProgramHeaderType));
         phentrys.push_back(phentry);
     }
 
@@ -124,6 +126,8 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
 //        std::cout << "\n\n section head " << i << std::endl;
 //        shentry->showInfo();
 		changeToSecMesg(shentry, smes);
+		smes->set_begin(_header->getShoff() + i* sizeof(SectionHeaderType));
+		smes->set_end(smes->begin() + sizeof(SectionHeaderType));
         shentrys.push_back(shentry);
     }
 

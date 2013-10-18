@@ -45,17 +45,21 @@ class PosTransfer:
     def in_same_line (self, addr_start, addr_end):
         return True if (addr_end//self.BYTES_PER_LINE == addr_start//self.BYTES_PER_LINE) else False
     
+    # the parameter is a [) address range
+    # return : a list of [addr, addr]
     def split_range(self, range_start, range_end):
+        range_end -= 1
         addr_range = []
-        while range_start < range_end and self.in_same_line(range_start, range_end) == False :
+        while range_start <= range_end and self.in_same_line(range_start, range_end) == False :
             print("split line (%d %d)" %(range_start, range_end) )
             addr_range.append( (range_start, self.upper_bound(range_start)) )
             range_start = self.upper_bound(range_start) + 1
-        addr_range.append( (range_start, range_end-1) )
+        addr_range.append( (range_start, range_end) )
         for a in addr_range:
             print("addr: %s" %(a.__str__()) )
         return addr_range
     
+    # the parameter is a [) address range
     def trans(self, range_start, range_end):
         addr_range = self.split_range(range_start, range_end)
         ret = []
@@ -114,6 +118,8 @@ class InspectorMainWin(Gtk.Window):
         self.head_tag = self.textbuffer.create_tag("elf head", foreground = "red")
         self.sechead_tag = self.textbuffer.create_tag("section head", foreground = "blue")
         self.proghead_tag = self.textbuffer.create_tag("program head", foreground = "green")
+        self.sechead_tag_ = self.textbuffer.create_tag("sec head head", foreground = "blue", background = "yellow")
+        self.proghead_tag_ = self.textbuffer.create_tag("prog head head", foreground = "green", background = "yellow")
         self.transfer = PosTransfer(self.textbuffer)
 
 #        cmd = "readelf -h "+ filename + " | head -2"
@@ -126,10 +132,25 @@ class InspectorMainWin(Gtk.Window):
             print("apply tag %s" %(it.__str__()))
             self.textbuffer.apply_tag(self.head_tag, it[0], it[1])
 
-#TODO: how to iterate array in mesg
-#        for pheader in self.mesg.ProgHeaderMesg:
-#            print("this is pheader: %s " %(pheader.__str__()))
-        
+        self.apply_headers(self.sechead_tag, self.mesg.secHeaders, self.sechead_tag_)
+        self.apply_headers(self.proghead_tag, self.mesg.progHeaders, self.proghead_tag_)
+    
+    def apply_headers(self, tag, headers, tag_):
+        for header in headers:
+            print("deal header: %s in apply", header.__str__())
+            iterlist = self.transfer.trans(header.begin, header.end)
+            for it in iterlist:
+                it_head = self.textbuffer.get_start_iter().copy()
+                it_head.forward_chars(it[0].get_offset())
+                it_head2 = it_head.copy()
+                it_head2.forward_chars(2)
+                self.textbuffer.apply_tag(tag_, it_head, it_head2)
+                it[0].forward_chars(3)
+                self.textbuffer.apply_tag(tag, it[0], it[1])
+                break
+            break
+
+       
 if __name__ == '__main__':
     if (len(sys.argv)<2):
         filename = "a.out"
