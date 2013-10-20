@@ -123,8 +123,8 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
         SectionHeaderType* shdr = getshdr(_header, i);
         SectionHeader<SectionHeaderType>* shentry = NEW SectionHeader<SectionHeaderType>(shdr, _rawFile);
 		mesg::HeaderMesg_SecHeaderMesg* smes = mes->add_secheaders();
-//        std::cout << "\n\n section head " << i << std::endl;
-//        shentry->showInfo();
+        std::cout << "\n\n section head " << i << std::endl;
+        shentry->showInfo();
 		changeToSecMesg(shentry, smes);
 		smes->set_begin(_header->getShoff() + i* sizeof(SectionHeaderType));
 		smes->set_end(smes->begin() + sizeof(SectionHeaderType));
