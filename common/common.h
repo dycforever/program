@@ -26,6 +26,9 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <iterator>
+
+
 namespace dyc {
 
 enum COLOR{BLACK=0,RED=1,GREEN=2,YELLOW=3,BLUE=4,WHITE=9};
@@ -149,14 +152,14 @@ typedef struct {
     void* address;
     unsigned long size;
     char file[1024];
-    unsigned long line;
+    long line;
 } ALLOC_INFO;
 
 typedef std::map<void*, ALLOC_INFO*> AllocMap;
 extern AllocMap* dycMemAllocMap;
 
 void dumpUnfreed();
-void addTrack(void* addr, unsigned long asize, const char *fname, unsigned long lnum);
+void addTrack(void* addr, unsigned long asize, const char *fname, long lnum);
 bool RemoveTrack(void* addr);
 
 
@@ -311,7 +314,7 @@ inline int getFileSize(const char *fileName, uint64_t &fileSize) {
         return -1;
     }
 
-    fileSize = fileInformation.st_size;
+    fileSize = (uint64_t)fileInformation.st_size;
 
     return 0;
 }
@@ -354,7 +357,7 @@ public:
     inline static uint64_t time() {
         struct timeval now_time = {0, 0};
         gettimeofday(&now_time, NULL);
-        return (now_time.tv_sec * 1000000 + now_time.tv_usec);
+        return (uint64_t)(now_time.tv_sec * 1000000 + now_time.tv_usec);
     }
 
     inline void begin() {
@@ -363,7 +366,7 @@ public:
 
     inline uint64_t ms_spend() {
         gettimeofday(&m_end, NULL);
-        return (m_end.tv_sec * 1000000 + m_end.tv_usec) - (m_begin.tv_sec * 1000000 + m_begin.tv_usec);
+        return (uint64_t) ((m_end.tv_sec * 1000000 + m_end.tv_usec) - (m_begin.tv_sec * 1000000 + m_begin.tv_usec));
     }
 
     inline double second_spend() {
@@ -411,6 +414,15 @@ inline void operator delete[](void *p, int)
 #define NEW new(std::nothrow)
 #endif // _DEBUG
 
+
+template <class CON>
+void print_container(std::string prefix, const CON& container) {
+    std::copy(container.begin(), container.end(), 
+            std::ostream_iterator<typename CON::value_type>(std::cout, " "));
+    std::cout << std::endl;
+}
+
 #endif // __COMMON_H__
+
 
 // vim: set ts=4 sw=4 sts=4 tw=100

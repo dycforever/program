@@ -5,7 +5,7 @@ DYC_GLOBAL dyc_global;
 
 AllocMap* dycMemAllocMap;
 
-void addTrack(void* addr, unsigned long asize, const char *fname, unsigned long lnum) 
+void addTrack(void* addr, unsigned long asize, const char *fname, long lnum) 
 { 
     ALLOC_INFO *info = new ALLOC_INFO();
     info->address = addr;
