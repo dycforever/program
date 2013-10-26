@@ -7,7 +7,10 @@ export CXXFLAGS= -g -pipe -Wall -fPIC -I../include/ -I../../common -L../../commo
 VPATH=../src
 
 .PHONY:all
-all: pingpongServer pingpongClient fileclient fileserver
+all: pingpongServer pingpongClient fileclient fileserver epoll_buffer
+
+epoll_buffer:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o epoll_buffer.cpp Task.o 
+	g++ -o $@ $(CFLAGS) $^ -lpthread -lcommon
 
 pingpongServer:Connection.o Client.o Server.o EventLoop.o Epoller.o InetAddress.o Socket.o pingpongServer.cpp Task.o 
 	g++ -o $@ $(CFLAGS) $^ -lpthread -lcommon

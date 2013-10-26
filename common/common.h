@@ -163,7 +163,7 @@ bool RemoveTrack(void* addr);
 #define DELETE(pointer) \
     do { \
         if ((pointer) != NULL) { \
-            operator delete ((pointer), 0); \
+            operator delete (((void*)pointer), 0); \
             (pointer) = NULL; \
         } \
     } while (0)
@@ -171,7 +171,7 @@ bool RemoveTrack(void* addr);
 #define DELETES(pointer) \
     do { \
         if ((pointer) != NULL) { \
-            operator delete[] ((pointer), 0); \
+            operator delete[] (((void*)pointer), 0); \
             (pointer) = NULL; \
         } \
     } while (0)
@@ -404,7 +404,7 @@ inline void operator delete[](void *p, int)
 {
     if (dyc::RemoveTrack(p)) {
 //        printf("call delete[]\n");
-        free(p);
+        free((void*)p);
     }
 }
 #else  // _DEBUG
