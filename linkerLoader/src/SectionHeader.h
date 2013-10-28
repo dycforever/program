@@ -5,6 +5,7 @@
 #include <libelf.h>
 #include <gelf.h>
 
+namespace dyc {
 
 /* Section header.  */
 //  typedef struct
@@ -23,7 +24,7 @@
 template <class ELF_SHDR>
 class SectionHeader {
 public:
-    SectionHeader(ELF_SHDR* shentry, char* strtbl):_shentry(shentry), _strtbl(strtbl){}
+    SectionHeader(ELF_SHDR* shentry):_shentry(shentry) {}
     uint64_t getName() { return _shentry->sh_name; }
     uint64_t getType() { return _shentry->sh_type; }
     std::string getTypeStr();
@@ -36,10 +37,12 @@ public:
     uint64_t getInfo(){ return _shentry->sh_info; }
     uint64_t getAddralign(){ return _shentry->sh_addralign; }
     uint64_t getEntsize(){ return _shentry->sh_entsize; }
+    int assignName(ELF_SHDR* shdr, char* rawFile);
     void showInfo();
+    std::string getNameStr();
 private:
     ELF_SHDR* _shentry;
-    char* _strtbl;
+    char* _name;
 };
 
 // {
@@ -81,6 +84,11 @@ private:
 //      #define SHT_LOUSER	  0x80000000	/* Start of application-specific */
 //      #define SHT_HIUSER	  0x8fffffff	/* End of application-specific */
 // }
+
+template <class ELF_SHDR>
+std::string SectionHeader<ELF_SHDR>::getNameStr() { 
+    return (_name != NULL) ? std::string(_name) : std::string("NULL"); 
+}
 
 template <class ELF_SHDR>
 std::string SectionHeader<ELF_SHDR>::getTypeStr() {
@@ -147,14 +155,17 @@ std::string SectionHeader<ELF_SHDR>::getFlagsStr() {
 }
 
 
-//uint64_t SectionHeader::getName() {
-//    char* start = "";
-//    start = ;
-//    string name(start);
-//}
+template <class ELF_SHDR>
+int SectionHeader<ELF_SHDR>::assignName(ELF_SHDR* shdr, char* rawFile) {
+    CHECK_ERROR(-1, shdr->sh_name, "shdr->name %d < 0", shdr->sh_name);
+    char* start = rawFile + shdr->sh_offset;
+    _name = (start + _shentry->sh_name);
+    return 0;
+}
 
 template <class ELF_SHDR>
 void SectionHeader<ELF_SHDR>::showInfo() {
+//        std::cout << "\n section head:" << std::endl;
     std::cout << "type: " << getType() << "  " << getTypeStr() << std::endl 
     << "flags: " << getFlags() << "  " << getFlagsStr() << std::endl 
     << "addr: " << std::hex << "0x" << getAddr() << std::endl 
@@ -163,9 +174,10 @@ void SectionHeader<ELF_SHDR>::showInfo() {
     << "link: " << std::dec << getLink() << std::endl 
     << "info: " << std::dec << getInfo() << std::endl 
     << "align: " << getAddralign() << std::endl
-    << "entsize: " << getEntsize() << std::endl;
+    << "entsize: " << getEntsize() << std::endl
+    << "name: " << _name << std::endl;
 }
 
-
+}
 
 #endif //__SECTIONHEADER_H__

@@ -36,7 +36,7 @@ class PosTransfer:
     def addr_to_off(self, addr):
         line_number = addr//self.BYTES_PER_LINE
         line_offset = self.ADDRLEN + addr%self.BYTES_PER_LINE*3 + self.in_first_half(addr%self.BYTES_PER_LINE)
-        print("add[%d] at line[%d] offset[%d] ---> [%d]" % (addr, line_number, addr%self.BYTES_PER_LINE, line_number * self.LINELEN + line_offset))
+#        print("add[%d] at line[%d] offset[%d] ---> [%d]" % (addr, line_number, addr%self.BYTES_PER_LINE, line_number * self.LINELEN + line_offset))
         return (line_number * self.LINELEN + line_offset)
 
     def lower_bound (self, addr):
@@ -96,9 +96,18 @@ class InspectorMainWin(Gtk.Window):
             new_text += line[0:33] + ' ' + line[33:] + '\n'
         return new_text
 
+    def getStrTab(self):
+        for sh in self.mesg.secHeaders:
+            print("strtab %d\n" % sh.type)
+            if sh.type == 3:
+                print("found strtab")
+#        self.strtab =
+
     def __init__(self, filename):
         Gtk.Window.__init__(self, title="Inspector")
         self.loadmesg()
+        self.getStrTab();
+
         self.textview = Gtk.TextView()
         self.textbuffer = self.textview.get_buffer()
 
@@ -152,18 +161,17 @@ class InspectorMainWin(Gtk.Window):
 #        self.grid.attach_next_to(button, scrolledwindow2, Gtk.PositionType.BOTTOM, width=1, height=1)
 
 
-
-        iterlist = self.transfer.trans(0, self.mesg.ehsize)
+        iterlist = self.transfer.trans(0, self.mesg.elfHeader.ehsize)
         for it in iterlist:
-            print("apply tag %s" %(it.__str__()))
+#            print("apply tag %s" %(it.__str__()))
             self.textbuffer.apply_tag(self.head_tag, it[0], it[1])
 
         self.apply_headers(self.sechead_tag, self.mesg.secHeaders, self.sechead_tag_)
         self.apply_headers(self.proghead_tag, self.mesg.progHeaders, self.proghead_tag_)
 
-    def apply_headers(self, tag, headers, tag_):
+    def apply_headers(self, firsttag, headers, tag_):
         for header in headers:
-            print("deal header: %s in apply", header.__str__())
+            print("deal header: %s in apply" % header.__str__())
             iterlist = self.transfer.trans(header.begin, header.end)
             first = True
             for it in iterlist:
@@ -175,7 +183,7 @@ class InspectorMainWin(Gtk.Window):
                     self.textbuffer.apply_tag(tag_, it_head, it_head2)
                     it[0].forward_chars(3)
                     first = False
-                self.textbuffer.apply_tag(tag, it[0], it[1])
+                self.textbuffer.apply_tag(firsttag, it[0], it[1])
 #            break
 
 

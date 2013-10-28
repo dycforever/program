@@ -7,8 +7,7 @@
 namespace dyc {
 
 template <class Header>
-mesg::HeaderMesg* changeToHeaderMesg (Header* header) {
-	mesg::HeaderMesg* mesg = new mesg::HeaderMesg();
+mesg::HeaderMesg_ElfHeaderMesg* changeToHeaderMesg (Header* header, mesg::HeaderMesg_ElfHeaderMesg* mesg) {
 
 	mesg->set_type(header->getType());
 	mesg->set_machine(header->getMachine());
@@ -32,7 +31,7 @@ mesg::HeaderMesg* changeToHeaderMesg (Header* header) {
 template <class SecHeader>
 mesg::HeaderMesg_SecHeaderMesg* changeToSecMesg (SecHeader* header, mesg::HeaderMesg_SecHeaderMesg* mesg) {
 
-	mesg->set_name(header->getName());
+	mesg->set_name(header->getNameStr());
 	mesg->set_type(header->getType());
 	mesg->set_flags(header->getFlags());
 	mesg->set_addr(header->getAddr());

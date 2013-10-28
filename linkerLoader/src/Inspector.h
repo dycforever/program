@@ -49,6 +49,8 @@ private:
 
     std::vector<ProgramHeader<ProgramHeaderType>* > phentrys;
     std::vector<SectionHeader<SectionHeaderType>* > shentrys;
+
+    bool isShstrtbl(SectionHeaderType* shdr, int);
 };
 
 template <class HEADER_TYPE>
@@ -93,7 +95,11 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
 	saveFile.open("mid.out", std::ios::out | std::ios::trunc | std::ios::binary);
     CHECK_ERROR(-1, !saveFile.fail(), "open file mid.out failed");
 
-	mesg::HeaderMesg* mes = changeToHeaderMesg(_header);
+	mesg::HeaderMesg* mes = NEW mesg::HeaderMesg();
+	mesg::HeaderMesg_ElfHeaderMesg* hmes = mes->mutable_elfheader();
+    changeToHeaderMesg(_header, hmes);
+//    _header->showInfo();
+//    mes->setElfHeaderMesg(hmes);
 
 
     int ret = getFileSize(fileName.c_str(), _rawFileSize);
@@ -105,8 +111,8 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
     
     for (unsigned int i=0; i<_header->getPhnum(); ++i) {
 //        ProgramHeaderType* phdr = NEW GElf_Phdr();
-        ProgramHeaderType* phdr = getphdr(_header, i);
 //        gelf_getphdr(_elf, i, phdr);
+        ProgramHeaderType* phdr = getphdr(_header, i);
         ProgramHeader<ProgramHeaderType>* phentry = NEW ProgramHeader<ProgramHeaderType>(phdr);
 
 		mesg::HeaderMesg_ProgHeaderMesg* pmes = mes->add_progheaders();
@@ -119,16 +125,28 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
         phentrys.push_back(phentry);
     }
 
+    // init section headers
+    SectionHeaderType* strtbl = NULL;
     for (unsigned int i=0; i<_header->getShnum(); ++i) {
         SectionHeaderType* shdr = getshdr(_header, i);
-        SectionHeader<SectionHeaderType>* shentry = NEW SectionHeader<SectionHeaderType>(shdr, _rawFile);
-		mesg::HeaderMesg_SecHeaderMesg* smes = mes->add_secheaders();
-        std::cout << "\n\n section head " << i << std::endl;
-        shentry->showInfo();
+        if (isShstrtbl(shdr, i)) {
+            strtbl = shdr;
+        }
+        SectionHeader<SectionHeaderType>* shentry = NEW SectionHeader<SectionHeaderType>(shdr);
+        shentrys.push_back(shentry);
+    }
+    CHECK_ERROR(-1, strtbl!=NULL, "get var string table failed");
+
+    // assign section headers' name
+    for (unsigned int i=0; i < shentrys.size(); ++i) {
+        SectionHeader<SectionHeaderType>* shentry = shentrys[i];
+        shentry->assignName(strtbl, _rawFile);
+		mesg::HeaderMesg_SecHeaderMesg* smes = mes->add_secheaders();;
+//        shentry->showInfo();
 		changeToSecMesg(shentry, smes);
 		smes->set_begin(_header->getShoff() + i* sizeof(SectionHeaderType));
 		smes->set_end(smes->begin() + sizeof(SectionHeaderType));
-        shentrys.push_back(shentry);
+
     }
 
 	if (!mes->SerializeToOstream(&saveFile)) {
@@ -161,6 +179,16 @@ int InspectorTemplate<ELF_TYPE>::inspect(const std::string& fileName) {
 
     saveFile.close();
     return 0;
+}
+
+template <class ELF_TYPE>
+bool InspectorTemplate<ELF_TYPE>::isShstrtbl(SectionHeaderType* shdr, int index) {
+    uint64_t type = shdr->sh_type;
+    if (type == SHT_STRTAB && shdr->sh_addr == 0 && _header->getShstrndx() == index) {
+        std::cout << "index:" << index << " shstrndx:" << _header->getShstrndx() << std::endl;
+        return true;
+    }
+    return false;
 }
 
 template <class ELF_TYPE>
