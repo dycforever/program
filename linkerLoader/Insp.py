@@ -36,7 +36,7 @@ class PosTransfer:
     def addr_to_off(self, addr):
         line_number = addr//self.BYTES_PER_LINE
         line_offset = self.ADDRLEN + addr%self.BYTES_PER_LINE*3 + self.in_first_half(addr%self.BYTES_PER_LINE)
-#        print("add[%d] at line[%d] offset[%d] ---> [%d]" % (addr, line_number, addr%self.BYTES_PER_LINE, line_number * self.LINELEN + line_offset))
+        print("add[%d] at line[%d] offset[%d] ---> [%d]" % (addr, line_number, addr%self.BYTES_PER_LINE, line_number * self.LINELEN + line_offset))
         return (line_number * self.LINELEN + line_offset)
 
     def lower_bound (self, addr):
@@ -90,6 +90,7 @@ class InspectorMainWin(Gtk.Window):
     def filltext(self, text):
         return text.replace("*\n", '*' + ' ' * (self.transfer.LINELEN - 2) + '\n')
 
+    # add a whitespace in the middle of 16 bytes
     def decorateText(self, text):
         new_text=''
         for line in text.split("\n"):
@@ -98,48 +99,44 @@ class InspectorMainWin(Gtk.Window):
 
     def getStrTab(self):
         for sh in self.mesg.secHeaders:
-            print("strtab %d\n" % sh.type)
+            print("strtab %x\n" % sh.type)
             if sh.type == 3:
                 print("found strtab")
 #        self.strtab =
 
-    def __init__(self, filename):
-        Gtk.Window.__init__(self, title="Inspector")
-        self.loadmesg()
-        self.getStrTab();
+    def deliminateSections(self):
+        for secheader in self.mesg.secHeaders:
+            print("deliminate header offset: %s \n"% hex(secheader.offset))
+            pos = self.transfer.addr_to_off(secheader.offset)
+            textiter = self.textbuffer.get_start_iter().copy()
+            textiter.forward_chars(pos-1)
+            textiter2 = textiter.copy()
+            textiter2.forward_char()
+            self.textbuffer.apply_tag(self.secDelimitTag, textiter, textiter2)
 
+
+    def memberInit(self):
         self.textview = Gtk.TextView()
         self.textbuffer = self.textview.get_buffer()
-
-        self.head_tag = self.textbuffer.create_tag("elf head", foreground = "red")
-        self.sechead_tag = self.textbuffer.create_tag("section head", foreground = "blue")
-        self.exec_tag = self.textbuffer.create_tag("exec", background = "blue")
-        self.proghead_tag = self.textbuffer.create_tag("program head", foreground = "green")
-        self.sechead_tag_ = self.textbuffer.create_tag("sec head head", foreground = "blue", background = "yellow")
-        self.proghead_tag_ = self.textbuffer.create_tag("prog head head", foreground = "green", background = "yellow")
-        self.transfer = PosTransfer(self.textbuffer)
-
-
         self.textview2 = Gtk.TextView()
         self.textview2.set_wrap_mode(Gtk.WrapMode.CHAR)
         self.textbuffer2 = self.textview2.get_buffer()
 
+        self.elfhead_tag = self.textbuffer.create_tag("elf head", foreground = "red")
+        self.sechead_tag = self.textbuffer.create_tag("section head", foreground = "blue")
+        self.sechead_tag_ = self.textbuffer.create_tag("sec head head", foreground = "blue", background = "yellow")
+        self.exec_tag = self.textbuffer.create_tag("exec", background = "blue")
+        self.proghead_tag = self.textbuffer.create_tag("program head", foreground = "green")
+        self.proghead_tag_ = self.textbuffer.create_tag("prog head head", foreground = "green", background = "yellow")
+        self.secDelimitTag = self.textbuffer.create_tag("section delimiter", background = "blue")
+
+        self.transfer = PosTransfer(self.textbuffer)
+
+
+    def deployWidget(self):
         self.set_default_geometry(400, 400);
         self.set_default_size(1000, 400)
         self.set_position(Gtk.WindowPosition.CENTER)
-
-#        cmd = "hexdump -C "+ filename + " | cut -c 11- | cut -d' ' -f1-18"
-#        cmd = "hexdump -C "+ filename
-        cmd = "xxd -g1 "+ filename
-        fileContent = subprocess.check_output(cmd, shell=True)
-        strt = fileContent.decode("ascii")
-        self.textbuffer.set_text(self.decorateText(strt))
-
-
-        cmd = "readelf -e "+ filename
-        fileContent = subprocess.check_output(cmd, shell=True)
-        strt = fileContent.decode("ascii")
-        self.textbuffer2.set_text(strt)
 
         self.grid = Gtk.Grid()
         self.add(self.grid)
@@ -162,11 +159,31 @@ class InspectorMainWin(Gtk.Window):
 #        self.grid.attach_next_to(button, scrolledwindow2, Gtk.PositionType.BOTTOM, width=1, height=1)
 
 
+    def __init__(self, filename):
+        Gtk.Window.__init__(self, title="Inspector")
+        self.loadmesg()
+        self.getStrTab();
+
+        self.memberInit();
+
+#        cmd = "hexdump -C "+ filename + " | cut -c 11- | cut -d' ' -f1-18"
+#        cmd = "hexdump -C "+ filename
+        cmd = "xxd -g1 "+ filename
+        fileContent = subprocess.check_output(cmd, shell=True)
+        self.textbuffer.set_text(self.decorateText(fileContent.decode("ascii")))
+
+        cmd = "readelf -e "+ filename
+        fileContent = subprocess.check_output(cmd, shell=True)
+        self.textbuffer2.set_text(fileContent.decode("ascii"))
+
+        self.deployWidget()
+
         iterlist = self.transfer.trans(0, self.mesg.elfHeader.ehsize)
         for it in iterlist:
 #            print("apply tag %s" %(it.__str__()))
-            self.textbuffer.apply_tag(self.head_tag, it[0], it[1])
+            self.textbuffer.apply_tag(self.elfhead_tag, it[0], it[1])
 
+        self.deliminateSections()
 #        self.showExec(self.mesg.progHeaders, self.exec_tag)
         self.apply_headers(self.sechead_tag, self.mesg.secHeaders, self.sechead_tag_)
         self.apply_headers(self.proghead_tag, self.mesg.progHeaders, self.proghead_tag_)
@@ -182,7 +199,7 @@ class InspectorMainWin(Gtk.Window):
 
     def apply_headers(self, firsttag, headers, tag_):
         for header in headers:
-            print("deal header: %s in apply" % header.__str__())
+#            print("deal header: %s in apply" % header.__str__())
             iterlist = self.transfer.trans(header.begin, header.end)
             first = True
             for it in iterlist:
