@@ -113,6 +113,7 @@ class InspectorMainWin(Gtk.Window):
 
         self.head_tag = self.textbuffer.create_tag("elf head", foreground = "red")
         self.sechead_tag = self.textbuffer.create_tag("section head", foreground = "blue")
+        self.exec_tag = self.textbuffer.create_tag("exec", background = "blue")
         self.proghead_tag = self.textbuffer.create_tag("program head", foreground = "green")
         self.sechead_tag_ = self.textbuffer.create_tag("sec head head", foreground = "blue", background = "yellow")
         self.proghead_tag_ = self.textbuffer.create_tag("prog head head", foreground = "green", background = "yellow")
@@ -166,8 +167,18 @@ class InspectorMainWin(Gtk.Window):
 #            print("apply tag %s" %(it.__str__()))
             self.textbuffer.apply_tag(self.head_tag, it[0], it[1])
 
+#        self.showExec(self.mesg.progHeaders, self.exec_tag)
         self.apply_headers(self.sechead_tag, self.mesg.secHeaders, self.sechead_tag_)
         self.apply_headers(self.proghead_tag, self.mesg.progHeaders, self.proghead_tag_)
+
+    def showExec (self, headers, tag):
+        for header in headers:
+            if (header.flags & 1):
+                begin = header.offset
+                end = begin + header.filesz
+                iterlist = self.transfer.trans(begin, end)
+                for it in iterlist:
+                    self.textbuffer.apply_tag(tag, it[0], it[1])
 
     def apply_headers(self, firsttag, headers, tag_):
         for header in headers:
