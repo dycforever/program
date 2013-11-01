@@ -1,4 +1,4 @@
 #!/bin/bash
 
-g++ first.cpp  -lglut -lGL
+g++ first.cpp -lglut -lGL -I/home/dyc/program/misc/opengl/sb5example/Src/GLTools/include/ -I/home/dyc/program/misc/opengl/sb5example/Src/GLTools/include/GL/
 ./a.out
