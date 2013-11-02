@@ -2,4 +2,5 @@
 *.ko
 *~
 cscope*
+core
 
