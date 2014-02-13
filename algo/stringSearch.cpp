@@ -2,7 +2,7 @@
 
 using namespace dyc;
 
-int bruteForce(char* text, char* pattern){
+int bruteForce(const char* text, const char* pattern){
     int textLen = strlen(text);
     int patternLen= strlen(pattern);
     if(patternLen > textLen)

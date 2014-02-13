@@ -2,6 +2,7 @@
 #include <stack>
 //#include <BinarySearchST.h>
 using namespace std;
+using namespace dyc;
 
 template<typename K, typename V>
 class BinarySearchST{

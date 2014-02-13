@@ -2,6 +2,7 @@
 #include <iterator> 
 
 using namespace std;
+using namespace dyc;
 
 template<typename T>
 void print(T* array, int len){

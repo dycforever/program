@@ -1,4 +1,4 @@
-INCPATH=-I. -I../include
+INCPATH=-I. -I../common
 
 CXXFLAGS=-O1 \
 		 -finline-functions \
@@ -9,19 +9,29 @@ CXXFLAGS=-O1 \
 		 -Werror \
 		 -fPIC
 
-all:shuffle_array BinarySearchST quicksort stringSearch eightQueue
+export LDFLAGS=-lcommon -lpthread 
+export LIBRARY_PATH=../common
+
+all-files=shuffle_array BinarySearchST quicksort stringSearch eightQueue
+
+#all:shuffle_array BinarySearchST quicksort stringSearch eightQueue
+all:$(all-files)
 
 shuffle_array:shuffle_array.cpp
-	g++ $(INCPATH) shuffle_array.cpp -o shuffle_array 
+	g++ $(INCPATH) -L$(LIBRARY_PATH) shuffle_array.cpp -o shuffle_array $(LDFLAGS)
 
 BinarySearchST:BinarySearchST.cpp
-	g++ $(INCPATH) BinarySearchST.cpp -o BinarySearchST 
+	g++ $(INCPATH) -L$(LIBRARY_PATH) BinarySearchST.cpp -o BinarySearchST  $(LDFLAGS)
 
 quicksort:quicksort.cpp
-	g++ $(INCPATH) quicksort.cpp -o quicksort 
+	g++ $(INCPATH) -L$(LIBRARY_PATH) quicksort.cpp -o quicksort  $(LDFLAGS)
 
 stringSearch:stringSearch.cpp
-	g++ $(INCPATH) $^ -o $@ 
+	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS)
 
 eightQueue:eightQueue.cpp
-	g++ $(INCPATH) $^ -o $@ 
+	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS)
+
+
+clean:
+	rm -rf $(all-files)
