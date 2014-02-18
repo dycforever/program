@@ -1,5 +1,5 @@
 
-srcFiles=accu.hs data.hs func.hs myZip.hs JsonParse.hs
+srcFiles=accu.hs data.hs func.hs myZip.hs JsonParse.hs deriving.hs eqclass.hs
 
 empty=
 suffix=.hs
@@ -15,3 +15,4 @@ clean:
 	for file in $(binfiles) ; do \
 		rm -rf $$file $$file.hi $$file.o ;\
 	done
+
