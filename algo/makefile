@@ -30,7 +30,7 @@ stringSearch:stringSearch.cpp
 	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS)
 
 eightQueue:eightQueue.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS)
+	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS) -std=c++0x
 
 
 clean:
