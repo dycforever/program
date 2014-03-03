@@ -1,17 +1,16 @@
-
-import System.Environment (getArgs)
-import Data.Char
-
---module JsonParse (
---    JValue(..)
+module JsonParse (
+    JValue(..),
 --    getString,
 --    getInt,
 --    getDouble,
 --    getBool,
 --    getObject,
 --    getArray,
---    isNull
---) where
+    isNull
+) where
+
+import System.Environment (getArgs)
+import Data.Char
 
 data JValue = JString String |
               JNumber Double |
@@ -20,7 +19,31 @@ data JValue = JString String |
               JObject [(String, JValue)]|
               JNull |
               Other 
-              deriving (Show)
+              deriving (Eq, Show)
+
+{-- snippet getString --}
+getString :: JValue -> Maybe String
+getString (JString s) = Just s
+getString _           = Nothing
+{-- /snippet getString --}
+
+{-- snippet getters --}
+getInt (JNumber n) = Just (truncate n)
+getInt _           = Nothing
+
+getDouble (JNumber n) = Just n
+getDouble _           = Nothing
+
+getBool (JBool b) = Just b
+getBool _         = Nothing
+
+getObject (JObject o) = Just o
+getObject _           = Nothing
+
+getArray (JArray a) = Just a
+getArray _          = Nothing
+
+isNull v            = v == JNull
 
 toDouble :: String -> Double
 toDouble cs = toDouble_ 0 cs

@@ -467,7 +467,7 @@ int BinarySearchST<K,V>::threadlize(){
     return 0;
 }
 
-int main(){
+int main() {
     BinarySearchST<string,int> st;
     char* buffer = NEW char[1024];
     st.put("E",1);
