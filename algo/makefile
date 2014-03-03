@@ -12,7 +12,7 @@ CXXFLAGS=-O1 \
 export LDFLAGS=-lcommon -lpthread 
 export LIBRARY_PATH=../common
 
-all-files=shuffle_array BinarySearchST quicksort stringSearch eightQueue 3sum
+all-files=shuffle_array BinarySearchST quicksort stringSearch eightQueue 3sum generateNumber
 
 #all:shuffle_array BinarySearchST quicksort stringSearch eightQueue
 all:$(all-files)
@@ -35,6 +35,8 @@ eightQueue:eightQueue.cpp
 3sum:3sum.cpp
 	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS) -std=c++0x
 
+generateNumber:generateNumber.cpp
+	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS) -std=c++0x
 
 clean:
 	rm -rf $(all-files)
