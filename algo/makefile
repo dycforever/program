@@ -24,7 +24,7 @@ BinarySearchST:BinarySearchST.cpp
 	g++ $(INCPATH) -L$(LIBRARY_PATH) BinarySearchST.cpp -o BinarySearchST  $(LDFLAGS)
 
 quicksort:quicksort.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) quicksort.cpp -o quicksort  $(LDFLAGS)
+	g++ -g $(INCPATH) -L$(LIBRARY_PATH) quicksort.cpp -o quicksort  $(LDFLAGS)
 
 stringSearch:stringSearch.cpp
 	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS)

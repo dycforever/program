@@ -40,33 +40,36 @@ int convert(vector<string>& vec, vector<int>& numbers){
     }
 }
 
+void heapify (int* numbers,int top, int size);
+void buildHeap(int* numbers, int size) {
+    for (int i=size/2; i>0; --i) {
+        heapify(numbers, i, size);
+    }
+}
+
 int heapsort(int* numbers, int size) {
-
-}
-
-void buildHeap() {
-    for (int i=0; i<size; ++i) {
-        heapfy(numbers, i+1);
+    --numbers;
+    buildHeap(numbers, size);
+    for (int i=size; i>=1; --i) {
+        swap(numbers[i], numbers[1]);
+        heapify(numbers, (i-1)/2, i-1);
     }
 }
 
-void heapfy (int* numbers,int last) {
-    int now = last;
-    int left = last-1;
-    int right = last;
-    int top = last/2 - 1;
-    while (top > 0) {
-        if (numbers[left] > numbers[top]) {
-            swap(numbers[left], numbers[top]);
-        }
-        if (numbers[right] > numbers[top]) {
-            swap(numbers[right], numbers[top]);
-        }
-        last /= 2;
-        left = last-1;
-        right = last;
-        top = last/2 - 1;
+void heapify (int* numbers,int top, int size) {
+    if (size < 2 || 2*top > size) {
+        return;
     }
+    int left = top * 2;
+    int right = left + 1;
+    if (left <= size && numbers[left] > numbers[top]) {
+        swap(numbers[left], numbers[top]);
+    }
+    if (right <= size && numbers[right] > numbers[top]) {
+        swap(numbers[right], numbers[top]);
+    }
+    heapify(numbers, left, size);
+    heapify(numbers, right, size);
 }
 
 int quicksort(int* numbers, int size) {
@@ -121,6 +124,7 @@ int main(){
     print(numbers);
 
     quicksort(numbers.data(), numbers.size());
+    heapsort(numbers.data(), numbers.size());
     NOTICE("after sort:");
     print(numbers);
     check<int>(numbers);
