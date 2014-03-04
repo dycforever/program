@@ -116,7 +116,6 @@ int BinarySearchST<K,V>::get(K key, V& value){
     Node* node = get(m_root, key); 
     if(NULL != node){
         value = node->m_value;
-//        NOTICE("found");
         return 0;
     }else{
         WARNING("not found");
@@ -129,10 +128,8 @@ typename BinarySearchST<K,V>::Node* BinarySearchST<K,V>::get(Node* node, K key){
     if(NULL == node)
         return NULL;
     if(node->m_key < key){
-//        DEBUG("search in right");
         return get(node->right, key);
     }else if(node->m_key > key){
-//        DEBUG("search in left");
         return get(node->left, key);
     }else{
         return node;
@@ -326,7 +323,7 @@ int BinarySearchST<K,V>::check_rank(){
             FATAL("check rank failed i:%d",i);
             return -1;
         }
-        DEBUG("check rank select success");
+//        DEBUG("check rank select success");
     }
     return 0;
 }
@@ -478,13 +475,16 @@ int main() {
     st.put("T",1);
     st.put("M",1);
     st.put("S",1);
-    
     cout <<"height: " <<  st.get_height() << endl;
+
     st.check();
+    cout << "pre order travel:" << endl;
     st.pre_order_travel();
+    cout << "in order travel:" << endl;
     st.in_order_travel();
     st.threadlize();
-    for(BinarySearchST<string, int>::Node* n=st.min();n!=st.max();n=n->suc)
+    cout << "after threadlize:" << endl;
+    for(BinarySearchST<string, int>::Node* n=st.min(); n != NULL; n = n->suc)
         cout << n->m_key << " ";
     cout << endl;
 }
