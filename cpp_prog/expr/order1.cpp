@@ -27,6 +27,7 @@ public:
 	CD() { cout<< "constructor "<< endl;}
 
 	CD(const CD& cd){
+        (void)cd;
 		cout << "copy constructor"  << endl;
 	}
 
@@ -55,6 +56,7 @@ public:
 	}
 
 	A(A& a){
+        (void)a;
 		cout << "A copy constructor" << endl;
 	}
 

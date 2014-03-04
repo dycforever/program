@@ -23,9 +23,8 @@ int main(){
 	int pp;
 	cin >> pp;
 	const int ii = get(pp);
-//	const int i2 = ii;
-	int ai[ii];
-	A* a = new A();
+	const int i2 = ii;
+    (void)i2;
 	cout << "finish" << endl;
 	char ca[] = "dyc";
 	cout << "sizeof ca= " << sizeof(ca) << endl;
@@ -33,9 +32,9 @@ int main(){
 	ca[1]='9';
 	printf("ca=%s\n",ca);
 	/*-----------------------------*/
-	printf("char=%d short=%d int=%d long=%d\n",sizeof(char),sizeof(short),sizeof(int),sizeof(long));
-	printf("st1=%d\n",sizeof(st1));
-	printf("st2=%d\n",sizeof(st2));
+	printf("char=%lu short=%lu int=%lu long=%lu\n",sizeof(char),sizeof(short),sizeof(int),sizeof(long));
+	printf("st1=%lu\n",sizeof(st1));
+	printf("st2=%lu\n",sizeof(st2));
 
 }
 // no sense just test if array can be defined without knowing the length, and yes

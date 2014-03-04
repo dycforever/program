@@ -16,8 +16,8 @@ using namespace std;
 
 class a{
 public:
-	int i;
 	string s;
+	int i;
 
 	a(string sp):s(sp),i(0){
 		cout << "in a(string)" << endl;
@@ -38,22 +38,27 @@ public:
 	}
 
 	void operator=(const a& ap){
+        (void)ap;
 		cout <<"in const op=(a)" << endl;
 	}
 
 	void operator=(a& ap){
+        (void)ap;
 		cout <<"in op=(a)" << endl;
 	}
 
 	void operator=(const string &s){
+        (void)s;
 		cout <<"in const op=(string)" << endl;
 	}
 
 	void operator=(string &s){
+        (void)s;
 		cout <<"in op=(string)" << endl;
 	}
 
 	void operator=(int s){   //void operator=(int s) is right, keep in mind!!!
+        (void)s;
 		cout <<"in op=(i)" << endl;
 	}
 
@@ -63,13 +68,16 @@ public:
 //	}
     operator long() {
 		cout <<"cast to long" << endl;
+        return 0;
     }
 
     operator int() {
 		cout <<"cast to int" << endl;
+        return 0;
     }
 
     a operator + (a& l){
+        (void)l;
 	    cout << "a + a = " <<endl;
         return *this;
     }
@@ -106,8 +114,6 @@ int main(){
 	ao = ao2;
 
 	cout<< "************" << endl;
-    int i = ao;
-    long l = ao;
     // 可见，函数返回的临时对象，如果作为另一个函数的参数
     // 调用的会是那个函数的const版本，但是这个临时对象其实不是
     // const，而是可以被赋值的

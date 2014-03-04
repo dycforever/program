@@ -27,10 +27,7 @@ public:
 float global;
 Init i1;
 int main(){
-	Init ca[2];
-
-	float local;
-	std::cout<<"global = "<<global<<"  local= "<<local<<std::endl;
+	std::cout<<"global = "<<global<<std::endl;
 	Init i1;
 	i1.show();
 	std::cout<<"---------------------------"<<std::endl;

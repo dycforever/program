@@ -5,6 +5,7 @@ export CPPFLAGS=\
 		 -pipe \
 		 -W \
 		 -Wall \
+		 -Werror \
 		 -fPIC \
 #		 -std=c++0x
 

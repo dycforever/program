@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <string.h>
 
-int main(int argc, char **argv) {
+int main() {
     struct timeval tv;
     unsigned long start_time;
     char *dst, *src;
