@@ -1,15 +1,26 @@
 
-srcFiles=accu.hs data.hs func.hs myZip.hs JsonParse.hs deriving.hs eqclass.hs
+#######################
+##   customize rule
+#######################
+
+#.SUFFIXES:.hs .o
+#.hs.o:
+#	ghc -c $< -o $@
+#accu:accu.hs
+
+srcFiles=accu.hs data.hs func.hs myZip.hs JsonParse.hs deriving.hs eqclass.hs Main.hs
 
 empty=
-suffix=.hs
-binfiles=$(subst $(suffix),$(empty),$(srcFiles))
+source_suffix=.hs
+obj_suffix=.o
 
-all:$(srcFiles)
-	for file in $(binfiles) ; do \
-		ghc $$file ;\
-	done
+# 下面替换命令的逗号后面不能有空格！
+binfiles=$(subst $(source_suffix),$(empty),$(srcFiles))
+objfiles=$(subst $(source_suffix),$(obj_suffix),$(srcFiles))
 
+all:$(binfiles)
+$(binfiles):%:%.hs
+	ghc $< -o $@
 
 clean:
 	for file in $(binfiles) ; do \

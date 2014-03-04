@@ -1,3 +1,4 @@
+
 INCPATH=-I. -I../common
 
 CXXFLAGS=-O1 \
@@ -12,31 +13,23 @@ CXXFLAGS=-O1 \
 export LDFLAGS=-lcommon -lpthread 
 export LIBRARY_PATH=../common
 
-all-files=shuffle_array BinarySearchST quicksort stringSearch eightQueue 3sum generateNumber
+srcFiles=shuffle_array.cpp BinarySearchST.cpp quicksort.cpp stringSearch.cpp eightQueue.cpp 3sum.cpp generateNumber.cpp
 
-#all:shuffle_array BinarySearchST quicksort stringSearch eightQueue
-all:$(all-files)
+empty=
+source_suffix=.cpp
+obj_suffix=.o
 
-shuffle_array:shuffle_array.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) shuffle_array.cpp -o shuffle_array $(LDFLAGS)
 
-BinarySearchST:BinarySearchST.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) BinarySearchST.cpp -o BinarySearchST  $(LDFLAGS)
+binfiles=$(subst $(source_suffix),$(empty),$(srcFiles))
+objfiles=$(subst $(source_suffix),$(obj_suffix),$(srcFiles))
 
-quicksort:quicksort.cpp
-	g++ -g $(INCPATH) -L$(LIBRARY_PATH) quicksort.cpp -o quicksort  $(LDFLAGS)
 
-stringSearch:stringSearch.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS)
-
-eightQueue:eightQueue.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS) -std=c++0x
-
-3sum:3sum.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS) -std=c++0x
-
-generateNumber:generateNumber.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) $^ -o $@  $(LDFLAGS) -std=c++0x
+all:$(binfiles)
+$(binfiles):%:%.cpp
+	g++ $(INCPATH) -L$(LIBRARY_PATH) $< -o $@ $(LDFLAGS)
 
 clean:
-	rm -rf $(all-files)
+	for file in $(binfiles) ; do \
+		rm -rf $$file $$file.o ;\
+	done
+
