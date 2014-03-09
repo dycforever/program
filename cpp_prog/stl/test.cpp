@@ -4,7 +4,7 @@
 
 class MyClass {
 private:
-    void operator = (MyClass& m){}
+    void operator = (MyClass& m){(void)m;}
     template <class T> void f(T) {}
 };
 

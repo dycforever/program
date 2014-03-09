@@ -20,4 +20,4 @@ all:$(targets)
 
 .PHONY: clean
 clean:
-	rm $(targets)
+	rm -rf $(targets)

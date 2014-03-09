@@ -2,9 +2,11 @@
 #include <iterator> 
 
 using namespace std;
+using namespace dyc;
 
 template<typename T>
-void print(T* array, int len){
+void print(vector<T> array) {
+    int len = array.size();
     for(int i=0; i<len; ++i){
         cout<<array[i];
         int value = i & 0xf;
@@ -17,8 +19,9 @@ void print(T* array, int len){
 }
 
 template<typename T>
-int check(T* array, int len){
-    NOTICE("begin check array: %p , len: %d", array, len);
+int check(vector<T> array) {
+    int len = array.size();
+//    NOTICE("begin check array: %p , len: %d", array, len);
     for(int i=0; i<len-1; ++i){
         if ( array[i] > array[i+1] ) {
             FATAL("found erroe array[%d] > array[%d]", i, i+1);
@@ -29,18 +32,50 @@ int check(T* array, int len){
     return 0;
 }
 
-int convert(vector<string>& vec, int* numbers){
-    
-    int i=0;
+int convert(vector<string>& vec, vector<int>& numbers){
     for(vector<string>::iterator iter = vec.begin();
             iter != vec.end(); ++iter){
         int n = atoi((*iter).c_str()); 
-        numbers[i] = n;
-        ++i;
+        numbers.push_back(n);
     }
 }
 
-int quicksort(int* numbers, int size){
+void max_heapify (int* numbers,int top, int size) {
+    if (size < 2 || 2*top > size) {
+        return;
+    }
+    int left = top * 2;
+    int right = left + 1;
+    if (left <= size && numbers[left] > numbers[top]) {
+        swap(numbers[left], numbers[top]);
+    }
+    if (right <= size && numbers[right] > numbers[top]) {
+        swap(numbers[right], numbers[top]);
+    }
+    max_heapify(numbers, left, size);
+    max_heapify(numbers, right, size);
+}
+
+void buildHeap(int* numbers, int size) {
+    if (size < 2) {
+        return;
+    }
+    for (int i=size/2; i>0; --i) {
+        max_heapify(numbers, i, size);
+    }
+}
+
+int heapsort(int* numbers, int size) {
+    --numbers;
+    buildHeap(numbers, size);
+    for (int i=size; i>1; --i) {
+        swap(numbers[i], numbers[1]);
+        max_heapify(numbers, 1, i-1);
+    }
+}
+
+
+int quicksort(int* numbers, int size) {
     if( size <= 1){
         return 0;
     }
@@ -48,16 +83,10 @@ int quicksort(int* numbers, int size){
     int low = 0;
     int high = size;
     while(low < high){
-        while ( numbers[--high] > privot) {
-            if (0 == high) {
-                break;
-            }
+        while ( numbers[--high] > privot && low != high) {
         }
 
-        while ( numbers[++low] <= privot) {
-            if (low == size) {
-                break;
-            }
+        while ( numbers[++low] <= privot && low != high) {
         }
 
         if( low < high ){
@@ -70,6 +99,19 @@ int quicksort(int* numbers, int size){
     quicksort(numbers+high+1, size-high-1);
 }
 
+template<class T>
+int uniq(vector<T>& array) {
+    size_t size = array.size();
+    size_t real = 0;
+    for (size_t i=0; i<size; ++i) {
+        if (i>0 && array[i] == array[i-1]) {
+            continue;
+        }
+        array[real++] = array[i];
+    }
+    array.resize(real);
+}
+
 int main(){
     string str;
     vector<string> vec;
@@ -79,13 +121,18 @@ int main(){
                 istream_iterator<string>(),
                 back_inserter<vector<string> >(vec));
     }
-    int* numbers = NEW int[vec.size()];
+    vector<int> numbers;
     convert(vec, numbers);
     NOTICE("before sort:");
-//    print<int>(numbers, vec.size());
-//    copy(numbers.begin(), numbers.end(), ostream_iterator<int>(cout, "\n"));
-    quicksort(numbers, vec.size());
+    print(numbers);
+
+    quicksort(numbers.data(), numbers.size());
+    heapsort(numbers.data(), numbers.size());
     NOTICE("after sort:");
-    check<int>(numbers, vec.size());
+    print(numbers);
+    check<int>(numbers);
+
+    uniq(numbers);
+    print(numbers);
     return 0;
 }

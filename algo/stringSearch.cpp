@@ -2,7 +2,7 @@
 
 using namespace dyc;
 
-int bruteForce(char* text, char* pattern){
+int bruteForce(const char* text, const char* pattern) {
     int textLen = strlen(text);
     int patternLen= strlen(pattern);
     if(patternLen > textLen)
@@ -21,7 +21,7 @@ int bruteForce(char* text, char* pattern){
     return -1;
 }
 
-int kmp(char* text, char* pattern){
+int kmp(char* text, char* pattern) {
     
 }
 
