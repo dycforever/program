@@ -28,6 +28,8 @@
 #include <algorithm>
 #include <iterator>
 
+// linux kernel header
+#include <sys/syscall.h>
 
 namespace dyc {
 
@@ -59,6 +61,7 @@ private:
 extern DYC_GLOBAL dyc_global;
 
 const char* errno2str(int errno_p);
+const char* syscall2str(int );
 
 #define LOGOUT stdout
 
