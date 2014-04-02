@@ -19,3 +19,4 @@ def read_bin():
 
 if __name__ == "__main__":
     print("read_bin()'s doc: %s" % read_bin.__doc__)
+
