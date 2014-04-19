@@ -427,16 +427,12 @@ const char* syscall2str(long syscallnum) {
 
     switch(syscallnum) {
         case(SYS__sysctl): return "SYS__sysctl";
-        case(SYS_accept): return "SYS_accept";
-        case(SYS_accept4): return "SYS_accept4";
         case(SYS_access): return "SYS_access";
         case(SYS_acct): return "SYS_acct";
         case(SYS_add_key): return "SYS_add_key";
         case(SYS_adjtimex): return "SYS_adjtimex";
         case(SYS_afs_syscall): return "SYS_afs_syscall";
         case(SYS_alarm): return "SYS_alarm";
-        case(SYS_arch_prctl): return "SYS_arch_prctl";
-        case(SYS_bind): return "SYS_bind";
         case(SYS_brk): return "SYS_brk";
         case(SYS_capget): return "SYS_capget";
         case(SYS_capset): return "SYS_capset";
@@ -451,7 +447,6 @@ const char* syscall2str(long syscallnum) {
         case(SYS_clock_settime): return "SYS_clock_settime";
         case(SYS_clone): return "SYS_clone";
         case(SYS_close): return "SYS_close";
-        case(SYS_connect): return "SYS_connect";
         case(SYS_creat): return "SYS_creat";
         case(SYS_create_module): return "SYS_create_module";
         case(SYS_delete_module): return "SYS_delete_module";
@@ -461,10 +456,8 @@ const char* syscall2str(long syscallnum) {
         case(SYS_epoll_create): return "SYS_epoll_create";
         case(SYS_epoll_create1): return "SYS_epoll_create1";
         case(SYS_epoll_ctl): return "SYS_epoll_ctl";
-        case(SYS_epoll_ctl_old): return "SYS_epoll_ctl_old";
         case(SYS_epoll_pwait): return "SYS_epoll_pwait";
         case(SYS_epoll_wait): return "SYS_epoll_wait";
-        case(SYS_epoll_wait_old): return "SYS_epoll_wait_old";
         case(SYS_eventfd): return "SYS_eventfd";
         case(SYS_eventfd2): return "SYS_eventfd2";
         case(SYS_execve): return "SYS_execve";
@@ -507,7 +500,6 @@ const char* syscall2str(long syscallnum) {
         case(SYS_getgid): return "SYS_getgid";
         case(SYS_getgroups): return "SYS_getgroups";
         case(SYS_getitimer): return "SYS_getitimer";
-        case(SYS_getpeername): return "SYS_getpeername";
         case(SYS_getpgid): return "SYS_getpgid";
         case(SYS_getpgrp): return "SYS_getpgrp";
         case(SYS_getpid): return "SYS_getpid";
@@ -519,8 +511,6 @@ const char* syscall2str(long syscallnum) {
         case(SYS_getrlimit): return "SYS_getrlimit";
         case(SYS_getrusage): return "SYS_getrusage";
         case(SYS_getsid): return "SYS_getsid";
-        case(SYS_getsockname): return "SYS_getsockname";
-        case(SYS_getsockopt): return "SYS_getsockopt";
         case(SYS_gettid): return "SYS_gettid";
         case(SYS_gettimeofday): return "SYS_gettimeofday";
         case(SYS_getuid): return "SYS_getuid";
@@ -547,7 +537,6 @@ const char* syscall2str(long syscallnum) {
         case(SYS_lgetxattr): return "SYS_lgetxattr";
         case(SYS_link): return "SYS_link";
         case(SYS_linkat): return "SYS_linkat";
-        case(SYS_listen): return "SYS_listen";
         case(SYS_listxattr): return "SYS_listxattr";
         case(SYS_llistxattr): return "SYS_llistxattr";
         case(SYS_lookup_dcookie): return "SYS_lookup_dcookie";
@@ -577,17 +566,12 @@ const char* syscall2str(long syscallnum) {
         case(SYS_mq_timedsend): return "SYS_mq_timedsend";
         case(SYS_mq_unlink): return "SYS_mq_unlink";
         case(SYS_mremap): return "SYS_mremap";
-        case(SYS_msgctl): return "SYS_msgctl";
-        case(SYS_msgget): return "SYS_msgget";
-        case(SYS_msgrcv): return "SYS_msgrcv";
-        case(SYS_msgsnd): return "SYS_msgsnd";
         case(SYS_msync): return "SYS_msync";
         case(SYS_munlock): return "SYS_munlock";
         case(SYS_munlockall): return "SYS_munlockall";
         case(SYS_munmap): return "SYS_munmap";
         case(SYS_name_to_handle_at): return "SYS_name_to_handle_at";
         case(SYS_nanosleep): return "SYS_nanosleep";
-        case(SYS_newfstatat): return "SYS_newfstatat";
         case(SYS_nfsservctl): return "SYS_nfsservctl";
         case(SYS_open): return "SYS_open";
         case(SYS_open_by_handle_at): return "SYS_open_by_handle_at";
@@ -619,9 +603,7 @@ const char* syscall2str(long syscallnum) {
         case(SYS_readlinkat): return "SYS_readlinkat";
         case(SYS_readv): return "SYS_readv";
         case(SYS_reboot): return "SYS_reboot";
-        case(SYS_recvfrom): return "SYS_recvfrom";
         case(SYS_recvmmsg): return "SYS_recvmmsg";
-        case(SYS_recvmsg): return "SYS_recvmsg";
         case(SYS_remap_file_pages): return "SYS_remap_file_pages";
         case(SYS_removexattr): return "SYS_removexattr";
         case(SYS_rename): return "SYS_rename";
@@ -647,16 +629,9 @@ const char* syscall2str(long syscallnum) {
         case(SYS_sched_setparam): return "SYS_sched_setparam";
         case(SYS_sched_setscheduler): return "SYS_sched_setscheduler";
         case(SYS_sched_yield): return "SYS_sched_yield";
-        case(SYS_security): return "SYS_security";
         case(SYS_select): return "SYS_select";
-        case(SYS_semctl): return "SYS_semctl";
-        case(SYS_semget): return "SYS_semget";
-        case(SYS_semop): return "SYS_semop";
-        case(SYS_semtimedop): return "SYS_semtimedop";
         case(SYS_sendfile): return "SYS_sendfile";
         case(SYS_sendmmsg): return "SYS_sendmmsg";
-        case(SYS_sendmsg): return "SYS_sendmsg";
-        case(SYS_sendto): return "SYS_sendto";
         case(SYS_set_mempolicy): return "SYS_set_mempolicy";
         case(SYS_set_robust_list): return "SYS_set_robust_list";
         case(SYS_set_thread_area): return "SYS_set_thread_area";
@@ -677,20 +652,12 @@ const char* syscall2str(long syscallnum) {
         case(SYS_setreuid): return "SYS_setreuid";
         case(SYS_setrlimit): return "SYS_setrlimit";
         case(SYS_setsid): return "SYS_setsid";
-        case(SYS_setsockopt): return "SYS_setsockopt";
         case(SYS_settimeofday): return "SYS_settimeofday";
         case(SYS_setuid): return "SYS_setuid";
         case(SYS_setxattr): return "SYS_setxattr";
-        case(SYS_shmat): return "SYS_shmat";
-        case(SYS_shmctl): return "SYS_shmctl";
-        case(SYS_shmdt): return "SYS_shmdt";
-        case(SYS_shmget): return "SYS_shmget";
-        case(SYS_shutdown): return "SYS_shutdown";
         case(SYS_sigaltstack): return "SYS_sigaltstack";
         case(SYS_signalfd): return "SYS_signalfd";
         case(SYS_signalfd4): return "SYS_signalfd4";
-        case(SYS_socket): return "SYS_socket";
-        case(SYS_socketpair): return "SYS_socketpair";
         case(SYS_splice): return "SYS_splice";
         case(SYS_stat): return "SYS_stat";
         case(SYS_statfs): return "SYS_statfs";
@@ -718,7 +685,6 @@ const char* syscall2str(long syscallnum) {
         case(SYS_times): return "SYS_times";
         case(SYS_tkill): return "SYS_tkill";
         case(SYS_truncate): return "SYS_truncate";
-        case(SYS_tuxcall): return "SYS_tuxcall";
         case(SYS_umask): return "SYS_umask";
         case(SYS_umount2): return "SYS_umount2";
         case(SYS_uname): return "SYS_uname";
