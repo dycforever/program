@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import time
-from functools import wraps
 
 print("example1: decorator function")
 print("###########################")
@@ -8,7 +7,6 @@ def timethis(func):
     '''
     Decorator that reports the execution time.
     '''
-    @wraps(func)
     def wrapper(*args, **kwargs):
         start = time.time()
         result = func(*args, **kwargs)
@@ -88,3 +86,91 @@ class Printer:
 
 p = Printer()
 p.print_message()
+
+
+#print("\nexample4: @wrapper for name")
+from functools import wraps
+#def hello(fn):
+#    @wraps(fn)
+#    def wrapper():
+#        print("hello, %s" % fn.__name__)
+#        fn()
+#        print("goodby, %s" % fn.__name__)
+#    return wrapper
+#
+#@hello
+#def foo():
+#    '''foo help doc'''
+#    print("I am foo")
+#    pass
+#
+#foo()
+## because of @wraps(fn) above
+#print(foo.__name__)#outpu foo
+#print(foo.__doc__ )#output foo help doc
+#
+#print("\nexample5: for cache")
+#def memo(fn):
+#    cache = {}
+#    miss = -1
+#
+#    @wraps(fn)
+#    def wrapper(*args):
+#        result = cache.get(args, miss)
+#        if result is miss:
+#            result = fn(*args)
+#            cache[args] = result
+#        return result
+#    return wrapper
+#
+#@memo
+#def fib(n):
+#    if n < 2:
+#        return n
+#    return fib(n - 1) + fib(n - 2)
+#
+#for i in range(0,10):
+#    print(i, end=" ")
+#print("")
+
+import inspect
+print("\nexample6: advanced example")
+def advance_logger(loglevel):
+
+    def get_line_number():
+        return inspect.currentframe().f_back.f_back.f_lineno
+
+    def _basic_log(fn, result, *args, **kwargs):
+        print("function   = " + fn.__name__,)
+        print("    arguments = {0} {1}".format(args, kwargs))
+        print("    return    = {0}".format(result))
+
+    def info_log_decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            result = fn(*args, **kwargs)
+            _basic_log(fn, result, args, kwargs)
+        return wrapper
+
+    def debug_log_decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            ts = time.time()
+            result = fn(*args, **kwargs)
+            te = time.time()
+            _basic_log(fn, result, args, kwargs)
+            print("    time      = %.6f sec" % (te-ts))
+            print("    called_from_line : " + str(get_line_number()))
+        return wrapper
+
+    if loglevel is "debug":
+        return debug_log_decorator
+    else:
+        return info_log_decorator
+
+@advance_logger(loglevel="debug")
+def add_sum(x, y):
+    return x+y
+
+add_sum(1, 2)
+add_sum(3, 4)
