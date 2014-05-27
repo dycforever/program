@@ -129,7 +129,12 @@ const char* syscall2str(int );
         dyc_global.unlock(); \
     } while(0)
 
-//        fprintf(LOGOUT,"[%d:%s][%s:%d][%s()] "format"\n", errno ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments); \
+
+#define CHECK(cond, fmt, arg...) do { \
+    if (!(cond)) {   \
+        FATAL(fmt, ##arg);  \
+    } \
+} while(0)
 
 #define CHECK_ERROR(ret, cond, fmt, arg...) do { \
     if (!(cond)) {   \

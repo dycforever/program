@@ -1,0 +1,49 @@
+#!/usr/bin/python
+
+env = Environment(CPPPATH = ['.'])
+deplibs=["common", "pthread"]
+
+Repository("/home/dyc/github/program/common")
+
+env.Program('partioner.cpp', 
+        LIBPATH=['.', "/home/dyc/github/common"],
+        LIBS=deplibs)
+
+env = Environment(tools=['default', 'packaging'])
+env.Install(install='/home/ding/test/bin/', source='partioner')
+
+#env.Package( NAME           = 'foo',
+#        VERSION        = '1.2.3',
+#        PACKAGEVERSION = 0,
+#        PACKAGETYPE    = 'rpm',
+#        LICENSE        = 'gpl',
+#        SUMMARY        = 'balalalalal',
+#        DESCRIPTION    = 'this should be really really long',
+#        X_RPM_GROUP    = 'Application/fu',
+#        )
+
+# env.Library(target = 'partitioner',
+#              source = partitioner_sources,
+#              dirInPackage = 'lib64')
+# 
+# util_sources = [str(fn) for fn in Glob('util/*.cpp')]
+# env.Library(target = 'util',
+#              source = util_sources,
+#              dirInPackage = 'lib64')
+# 
+# 
+# libsname=[
+#      'partitioner',
+#      'anet',
+#      'util',
+#      'alog',
+#      'amonitor_client',
+#      'protobuf',
+#      'arpc',
+#      'autil',
+#      'pthread'
+# ]
+# 
+# #Repository('/home/dingyc/program/cpp/', '/home/dingyc/program/cpp/util')
+# env.Program("partitioner", "main.cpp", LIBPATH=["."], LIBS=libsname)
+

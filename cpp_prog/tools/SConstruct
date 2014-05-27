@@ -1,0 +1,16 @@
+#!/usr/bin/python
+
+env = Environment(CPPPATH = ['.'])
+deplibs=["common", "pthread", "z"]
+
+env.Repository("/home/dyc/github/program/common", "/home/dyc/tools/zlib")
+env.Program('zpipe.c', 
+        LIBPATH=['.', "/home/dyc/github/common", "/home/dyc/tools/zlib"],
+        LIBS=deplibs)
+env.Install(install='/home/dyc/bin/', source='zpipe')
+
+env = env.Clone()
+env.Repository("/home/dyc/github/program/common", "/home/dyc/tools/zlib")
+env.Program('ztest.c', 
+        LIBPATH=['.', "/home/dyc/github/common", "/home/dyc/tools/zlib"],
+        LIBS=deplibs)
