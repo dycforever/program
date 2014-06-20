@@ -3,8 +3,8 @@
 #include <assert.h>
 #include "zlib.h"
 
-#define DEF_CHUNK 29
-#define INF_CHUNK 31
+#define DEF_CHUNK 4096
+#define INF_CHUNK 4096
 
 /* Compress from file source to file dest until EOF on source.
    def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
@@ -86,6 +86,7 @@ int inf(FILE *source, FILE *dest)
     z_stream strm;
     unsigned char in[INF_CHUNK];
     unsigned char out[INF_CHUNK];
+    int firstBlock = 1;
 
     /* allocate inflate state */
     strm.zalloc = Z_NULL;
@@ -109,6 +110,16 @@ int inf(FILE *source, FILE *dest)
         if (strm.avail_in == 0)
             break;
         strm.next_in = in;
+
+        if (firstBlock) {
+            firstBlock = 0;
+            if (strm.avail_in > 3 && in[0] == 0x00 && in[1] == 0x01 && in[2] == 0x02) {
+                in[0] = 0x1f;
+                in[1] = 0x8b;
+                in[2] = 0x08;
+                fprintf(stderr, "dealing gz2 data\n");
+            }
+        }
 
         /* run inflate() on input until output buffer not full */
         do {

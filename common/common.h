@@ -31,132 +31,10 @@
 // linux kernel header
 #include <sys/syscall.h>
 
+#include "log.h"
+//#include "poison.h"
+
 namespace dyc {
-
-enum COLOR{BLACK=0,RED=1,GREEN=2,YELLOW=3,BLUE=4,WHITE=9};
-enum Format{BOLD=1,NORMAL,UNDERSCORE=4,REVERSE=7,DELETE=9};
-inline void PRINT_COLOR(COLOR foreground,COLOR background=BLACK,Format format=BOLD){
-	std::cout<<"\E[3"<<foreground<<";4"<<background<<";"<<format<<"m";
-}
-inline void UNPRINT_COLOR(){
-	std::cout<<"\033[0m";
-}
-
-class DYC_GLOBAL {
-public:
-    DYC_GLOBAL() {
-        pthread_spin_init(&g_spin_lock, PTHREAD_PROCESS_PRIVATE);
-    }
-    void lock() {
-        pthread_spin_lock(&g_spin_lock); 
-    }
-
-    void unlock() {
-        pthread_spin_unlock(&g_spin_lock); 
-    }
-private:
-    pthread_spinlock_t g_spin_lock;
-};
-
-extern DYC_GLOBAL dyc_global;
-
-const char* errno2str(int errno_p);
-const char* syscall2str(int );
-
-#define LOGOUT stdout
-
-#define DEBUG(format, arguments...) \
-    do{ \
-        dyc_global.lock(); \
-        PRINT_COLOR(BLUE); \
-        fprintf(LOGOUT," [DEBUG]  "); \
-        UNPRINT_COLOR(); \
-        fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
-        fflush(LOGOUT);\
-        dyc_global.unlock(); \
-    }while(0)
-
-#define TRACE(format, arguments...) \
-    do{ \
-        PRINT_COLOR(GREEN); \
-        fprintf(LOGOUT,"[TRACE]\t"); \
-        UNPRINT_COLOR(); \
-        fprintf(LOGOUT,format"\n", ##arguments);\
-        dyc_global.unlock(); \
-    }while(0)
-
-#define NOTICE(format, arguments...) \
-    do{ \
-        dyc_global.lock(); \
-        PRINT_COLOR(GREEN); \
-        fprintf(LOGOUT," [NOTICE] "); \
-        UNPRINT_COLOR(); \
-        fprintf(LOGOUT,format"\n", ##arguments);\
-        fflush(LOGOUT);\
-        dyc_global.unlock(); \
-    }while(0)
-
-#define WARNING(format, arguments...) \
-    do{ \
-        dyc_global.lock(); \
-        PRINT_COLOR(YELLOW); \
-        fprintf(LOGOUT,"[WARNING] "); \
-        UNPRINT_COLOR(); \
-        fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
-        fflush(LOGOUT);\
-        dyc_global.unlock(); \
-    } while(0)
-
-#define FATAL(format, arguments...) \
-    do{ \
-        dyc_global.lock(); \
-        PRINT_COLOR(RED); \
-        fprintf(LOGOUT," [FATAL]  "); \
-        UNPRINT_COLOR(); \
-        fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
-        fflush(LOGOUT);\
-        dyc_global.unlock(); \
-    } while(0)
-
-#define FATAL_ERROR(format, arguments...) \
-    do{ \
-        dyc_global.lock(); \
-        PRINT_COLOR(RED); \
-        fprintf(LOGOUT," [FATAL]  "); \
-        UNPRINT_COLOR(); \
-        fprintf(LOGOUT,"[%s:%s][%s:%d][%s()] " format"\n", errno2str(errno) ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments); \
-        fflush(LOGOUT);\
-        dyc_global.unlock(); \
-    } while(0)
-
-
-#define CHECK(cond, fmt, arg...) do { \
-    if (!(cond)) {   \
-        FATAL(fmt, ##arg);  \
-    } \
-} while(0)
-
-#define CHECK_ERROR(ret, cond, fmt, arg...) do { \
-    if (!(cond)) {   \
-        FATAL(fmt, ##arg);  \
-        return (ret);  \
-    } \
-} while(0)
-
-#define CHECK_ERRORNO(ret, cond, fmt, arg...) do { \
-    if (!(cond)) {   \
-        FATAL_ERROR(fmt, ##arg);  \
-        return (ret);  \
-    } \
-} while(0)
-
-#define CHECK_WARNING(ret, cond, fmt, arg...) do { \
-    if (!(cond)) {   \
-        WARNING(fmt, ##arg);  \
-        return (ret);  \
-    } \
-} while(0)
-
 
 typedef struct {
     void* address;
@@ -225,81 +103,6 @@ const pthread_t NULL_THREAD_HANDLE = (pthread_t)0;
 #pragma GCC diagnostic error "-Wold-style-cast"
 #endif
 
-// Do not passing const char[] to string_buffer, it will core dump
-inline size_t trim_right(char *string_buffer, const size_t string_buffer_length) {
-    if (NULL == string_buffer || 0 == string_buffer_length) {
-        return 0;
-    }
-
-    size_t new_length = string_buffer_length;
-    char *rbegin = string_buffer + new_length - 1;
-
-    while (new_length > 0 && ('\0' == *rbegin || '\n' == *rbegin || '\r' == *rbegin || ' ' == *rbegin)) {
-        *(rbegin--) = '\0';
-        --new_length;
-    }
-
-    return new_length;
-}
-
-// Do not passing const char[] to start, it will core dump
-// Be sure *end must equal to '\0', or the final token will apear unexpect phenomenon.
-inline char *get_next_token(char *&start, const char *end, const char delimiter) {
-    if (NULL == start || end == NULL) {
-        return NULL;
-    }
-
-    if (start >= end) {
-        return NULL;
-    }
-
-    char *token = start;
-
-    for (; start < end; ++start) {
-        if (delimiter == *start) {
-            *start = '\0';
-            ++start;
-            break;
-        }
-    }
-
-    return token;
-}
-
-// Simple function, not allowed lead blank, not allowed negative sign.
-// typename should be integer type, do not use other types, it may cause some errors.
-template<typename T>
-inline int get_next_integer(char *&start, const char *end, const char delimiter, T &value) {
-    value = 0;
-
-    if (NULL == start || NULL == end) {
-        return -1;
-    }
-
-    if (start >= end) {
-        return -1;
-    }
-
-    if (*start == delimiter) {
-        return -1;
-    }
-
-    for (; start < end; ++start) {
-        if (delimiter == *start) {
-            *start = '\0';
-            ++start;
-            break;
-        } else if ('0' <= *start && *start <= '9') {
-            value = value * 10 + (*start - '0');
-        } else {
-            WARNING("Try to read integer from a non-integer character[%c].", *start);
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
 // Some usefull file operation
 inline int create_file_folder(const std::string &file_path) {
     if (access(file_path.c_str(), F_OK) != 0) {
@@ -308,7 +111,6 @@ inline int create_file_folder(const std::string &file_path) {
             return -1;
         }
     }
-
     return 0;
 }
 
@@ -317,33 +119,12 @@ inline int getFileSize(const char *fileName, uint64_t &fileSize) {
         FATAL("Input arguments error: file_name[address: %p] is NULL!", fileName);
         return -1;
     }
-
     struct stat fileInformation;
     if (stat(fileName, &fileInformation) < 0) {
         FATAL("Get file[%s] information failed!", fileName);
         return -1;
     }
-
     fileSize = (uint64_t)fileInformation.st_size;
-
-    return 0;
-}
-
-template<typename T>
-inline int get_elements_numbers(const char *file_name, uint64_t &elements_numbers) {
-    uint64_t file_size = 0;
-    if (getFileSize(file_name, file_size) != 0) {
-        FATAL("Get file[%s] size failed!", file_name);
-        return -1;
-    }
-
-    if ((file_size % sizeof(T)) != 0) {
-        FATAL("File size must be multiply of sizeof uint64_t[%lu]!", sizeof(T));
-        return -1;
-    }
-
-    elements_numbers = file_size / sizeof(T);
-
     return 0;
 }
 
@@ -401,7 +182,6 @@ inline void * operator new(size_t size, const char *file, int line)
 inline void operator delete(void *p, int)
 {
     if (dyc::RemoveTrack(p)) {
-//        printf("call free %p\n", p);
         free(p);
     }
 }
@@ -416,12 +196,13 @@ inline void * operator new[](size_t size, const char *file, int line)
 inline void operator delete[](void *p, int)
 {
     if (dyc::RemoveTrack(p)) {
-//        printf("call delete[]\n");
         free((void*)p);
     }
 }
-#else  // _DEBUG
+#else  // if not define _DEBUG
+
 #define NEW new(std::nothrow)
+
 #endif // _DEBUG
 
 
@@ -436,3 +217,4 @@ void print_container(std::string prefix, const CON& container) {
 
 
 // vim: set ts=4 sw=4 sts=4 tw=100
+

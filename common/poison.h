@@ -16,7 +16,7 @@ it to be very effective */
 #   pragma GCC poison wcrtomb wctob
 #   pragma GCC poison sprintf vsprintf vfprintf
 #   pragma GCC poison asprintf vasprintf
-#   pragma GCC poison strncpy wcsncpy
+#   pragma GCC poison wcsncpy
 #   pragma GCC poison strtok wcstok
 #   pragma GCC poison strdupa strndupa
 

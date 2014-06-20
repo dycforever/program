@@ -3,8 +3,8 @@
 #include <assert.h>
 #include "zlib.h"
 
-#define DEF_CHUNK 29
-#define INF_CHUNK 31
+#define DEF_CHUNK 500
+#define INF_CHUNK 250
 
 /* Compress from file source to file dest until EOF on source.
    def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
@@ -38,8 +38,8 @@ int def(FILE *source, FILE *dest, int level)
             (void)deflateEnd(&strm);
             return Z_ERRNO;
         }
-        //        fprintf(stderr, "read %ld raw bytes\n", (long)strm.avail_in);
-        flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
+        fprintf(stderr, "read %ld raw bytes\n", (long)strm.avail_in);
+        flush = feof(source) ? Z_FINISH : Z_SYNC_FLUSH;
         strm.next_in = in;
         if (firstBlock) {
             firstBlock = 0;
@@ -58,7 +58,7 @@ int def(FILE *source, FILE *dest, int level)
             ret = deflate(&strm, flush);    /* no bad return value */
             assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
             have = DEF_CHUNK - strm.avail_out;
-//            fprintf(stderr, "write %ld compressed bytes\n", (long)have);
+            fprintf(stderr, "write %ld compressed bytes\n", (long)have);
             if (have != 0) {
                 sprintf(filename, "out.part.%d", filecnt);
                 FILE* fp = fopen(filename, "w");
@@ -114,7 +114,7 @@ int inf(FILE *source, FILE *dest)
             (void)inflateEnd(&strm);
             return Z_ERRNO;
         }
-//        fprintf(stderr, "read %ld compress bytes\n", (long)strm.avail_in);
+        fprintf(stderr, "read %ld compress bytes\n", (long)strm.avail_in);
         if (strm.avail_in == 0)
             break;
         strm.next_in = in;
@@ -123,7 +123,7 @@ int inf(FILE *source, FILE *dest)
         do {
             strm.avail_out = INF_CHUNK;
             strm.next_out = out;
-            ret = inflate(&strm, Z_NO_FLUSH);
+            ret = inflate(&strm, Z_SYNC_FLUSH);
             assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
             switch (ret) {
             case Z_NEED_DICT:
@@ -134,7 +134,7 @@ int inf(FILE *source, FILE *dest)
                 return ret;
             }
             have = INF_CHUNK - strm.avail_out;
-//            fprintf(stderr, "write %ld raw bytes\n", (long)have);
+            fprintf(stderr, "write %ld raw bytes\n", (long)have);
             if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
                 (void)inflateEnd(&strm);
                 return Z_ERRNO;

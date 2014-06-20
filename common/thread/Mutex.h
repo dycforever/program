@@ -93,31 +93,31 @@ class MutexLock : boost::noncopyable
 
 };
 
-
-class MutexLockGuard : boost::noncopyable
+template<typename LOCK>
+class LockGuard : boost::noncopyable
 {
  public:
-  explicit MutexLockGuard(MutexLock& mutex)
-    : _mutex(mutex)
+  explicit LockGuard(LOCK& lock)
+    : _lock(lock)
   {
-    _mutex.lock();
+    _lock.lock();
   }
 
-  ~MutexLockGuard()
+  ~LockGuard()
   {
-    _mutex.unlock();
+    _lock.unlock();
   }
 
  private:
 
-  MutexLock& _mutex;
+  LOCK& _lock;
 };
 
 }
 
 // Prevent misuse like:
-// MutexLockGuard(_mutex);
+// LockGuard(_mutex);
 // A tempory object doesn't hold the lock for long!
-#define MutexLockGuard(x) error "Missing guard object name"
+#define LockGuard(x) error "Missing guard object name"
 
 #endif  // _mutexH

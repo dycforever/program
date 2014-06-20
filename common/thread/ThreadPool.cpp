@@ -124,7 +124,7 @@ int ThreadPool::get_thread_id()
     std::map<pthread_t, int>::iterator iter;
     iter = _thread_to_id.find(pthread_self());
     if (iter == _thread_to_id.end()) {
-        WARNING("can not find this thread in map");
+        WARN("can not find this thread in map");
         return -1;
     }
     return iter->second;

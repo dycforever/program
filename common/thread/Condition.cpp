@@ -5,8 +5,7 @@
 namespace dyc {
 
 // returns true if time out, false otherwise.
-bool Condition::waitForSeconds(int seconds)
-{
+bool Condition::waitForSeconds(int seconds) {
   struct timespec abstime;
   clock_gettime(CLOCK_REALTIME, &abstime);
   abstime.tv_sec += seconds;

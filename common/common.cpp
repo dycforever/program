@@ -1,8 +1,6 @@
 #include "common.h"
 namespace dyc {
 
-DYC_GLOBAL dyc_global;
-
 const char* errno2str(int errno_p) {
     switch(errno_p) {
         case (EPERM): return "EPERM";
