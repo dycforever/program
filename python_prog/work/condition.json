@@ -1,0 +1,12 @@
+
+{
+    "location" : ["s"], 
+    "from" : ["uczj"], 
+    "fr" : ["iphone"], 
+    "ve" : ["9.8"], 
+
+    "host" : ["m.sm.cn"], 
+    "ip" : ["iplist"], 
+
+    "ouput" : "output_filename" 
+}
