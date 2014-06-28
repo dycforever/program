@@ -17,7 +17,7 @@ bool DllWrapper::DllOpen()
 {
     mHandler = ::dlopen(mDllPath.c_str(), RTLD_NOW);
     if (mHandler == NULL) {
-        ERROR("dllopen failed: %s", ::dlerror());
+        FATAL("dllopen failed: %s", ::dlerror());
         return false;
     }
     return true;
@@ -28,7 +28,7 @@ bool DllWrapper::DllClose()
     if (mHandler != NULL) {
         int ret = ::dlclose(mHandler);
         if (ret != 0) {
-            ERROR("dllclose failed: %s", ::dlerror());
+            FATAL("dllclose failed: %s", ::dlerror());
             return false;
         }
         mHandler = NULL;
@@ -43,7 +43,7 @@ void* DllWrapper::DllSymbol(const std::string& symbolName)
     }
     void* symbol = ::dlsym(mHandler, symbolName.c_str());
     if (symbol == NULL) {
-        ERROR("dllsymbol failed: %s", ::dlerror());
+        FATAL("dllsymbol failed: %s", ::dlerror());
     }
     return symbol;
 }

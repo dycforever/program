@@ -4,6 +4,7 @@ import sys;
 import getopt
 import time
 import math
+import json
 
 class URLObject:
     def __init__(self):
@@ -14,16 +15,18 @@ class URLObject:
         self.q = ''
         self.reqFrom = ''
         self.eid= ''
-    def toString(self):
-        print "url location", self.location, "ve:", self.ve, "fr:", self.fr
+    def __str__(self):
+        desc = "url location ==> %s \n  ve ==> %s \n  fr ==> %s\n" % (self.location, self.ve, self.fr)
+        desc += "  from ==> %s \n " % (self.reqFrom)
+        return desc
 
 
 class URLParser:
     def parseURL(self, urlStr):
         urlStr = urlStr.strip()
         url = URLObject()
-        locationEnd = urlStr.find('?') + 1
-        url.location = urlStr[0:locationEnd]
+        locationEnd = urlStr.find('?')
+        url.location = urlStr[1:locationEnd]
         url.querys = urlStr[locationEnd:].split('&')
         url.ve = ""
         url.fr = ""
@@ -52,14 +55,25 @@ class RequestLine:
         self.url = line[urlStart: url_end]
 
         self.version = line[url_end+1: ]
+        return
+
+    def __str__(self):
+        return "methed: " + self.httpMethod + " version: " + self.version
 
 # for performance
 class TimeStamp:
     def __init__(self, line):
+        self.minite = ""
+        self.second = ""
+        if (line == None or line == ""):
+            return
         minStart = line.find(':') + 1
         self.minite = int(line[minStart : minStart + 2]);
         secStart = line.find(':', minStart + 1) + 1
         self.second = int(line[secStart : secStart + 2]);
+
+    def __str__(self):
+        return "minite: " + str(self.minite) + " second: " + str(self.second)
 
 class Record:
     def __init__(self):
@@ -79,15 +93,12 @@ class Record:
 
     def __str__(self):
         desc = "xff ==> %s \ntimestamp ==> %s \n" % (self.xff, str(self.timestamp))
-        desc += "requestLineStr ==> %s\n" % (self.requestLineStr)
+        desc += "%s\n" % (str(self.urlObj))
         desc += "code ==> %d \nrequest_time ==> %f\n" % (self.statusCode, self.requestTime)
         desc += "host ==> %s \nrefer ==> %s" % (self.host, self.refer)
         return desc
 
 class LogParser:
-    def __init__(self, needTime=False):
-        self.needTime = needTime
-
     def parse(self, line):
         record = Record()
 
@@ -100,13 +111,11 @@ class LogParser:
         record.remoteAddr = line[xffEnd+1:ipsEnd]
 
         # parse local time
-        if self.needTime:
-            timeStrStart = line.find("[") + 1
-            timeStrEnd = line.find(" ", timeStrStart)
-            timeStr = line[timeStrStart:timeStrEnd]
-            #
-            record.timestamp = time.mktime(time.strptime(timeStr,"%d/%b/%Y:%H:%M:%S"))
-            # record.timestamp = TimeStamp(timeStr)
+        timeStrStart = line.find("[") + 1
+        timeStrEnd = line.find(" ", timeStrStart)
+        timeStr = line[timeStrStart:timeStrEnd]
+        # record.timestamp = time.mktime(time.strptime(timeStr,"%d/%b/%Y:%H:%M:%S"))
+        record.timestamp = TimeStamp(timeStr)
         timeEnd = line.find('[', ipsEnd)+1
 
         # parse http request
@@ -117,6 +126,9 @@ class LogParser:
 
         # parse url in http request
         record.urlObj = URLParser().parseURL(record.requestLineObj.url)
+        if (record.urlObj == None):
+            print "parse url failed"
+            return
 
         # parse status code
         statusCodeStart = reqLineEnd + 2
@@ -165,134 +177,65 @@ class FileListReader :
                 yield line;
         return
 
+class DefaultCollector:
+    def init(self, outputFile):
+        pass
+    def put(self, record):
+        pass
+    def dump(self):
+        pass
 
-class Collector:
-    def init(self):
+class IpCollector(DefaultCollector):
+    def init(self, outputFile):
         self.container = dict()
+        self.outputFile = outputFile
+
     def put(self, record):
         count = 0
         if record.remoteAddr in self.container:
             count = self.container[record.remoteAddr]
         self.container[record.remoteAddr] = (count+1)
 
-    def dump(self,outputFile):
+    def dump(self):
         print "begin to dump", outputFile
-        fp = open(outputFile, "w")
+        fp = open(self.outputFile, "w")
         for (k,v) in self.container.items():
             output_str = str(v) + " " + k + "\n"
             fp.write(output_str)
         fp.close()
 
-class VeValidator:
-    def __init__(self, ve):
-        self.ve = ve
-    def isValid(self, record):
-        return record.urlObj.ve == self.ve
-    def __str__(self):
-        return "VeValidator " + self.ve + " "
-
-class LocationValidator:
-    def __init__(self, location):
-        self.location = location
-    def isValid(self, record):
-        return record.urlObj.location == self.location
-    def __str__(self):
-        return "LocationValidator " + self.location + " "
-
-class FrValidator:
-    def __init__(self, fr):
-        self.fr = fr
-    def isValid(self, record):
-        return record.urlObj.fr == self.fr
-    def __str__(self):
-        return "FrValidator " + self.fr + " "
-
-class FromValidator:
-    def __init__(self, reqFrom):
-        self.reqFrom = reqFrom
-    def isValid(self, record):
-        return record.urlObj.reqFrom == self.reqFrom
-    def __str__(self):
-        return "FromValidator " + self.reqFrom + " "
-
-class HostValidator:
-    def __init__(self, host):
-        self.host = host
-    def isValid(self, record):
-        return record.host == self.host
-    def __str__(self):
-        return "HostValidator " + self.host + " "
 
 class Executor :
-    def __init__(self, ve, fr, host, req_from, location):
-        self.conditions = set()
-        if ve != "":
-            print "add condition: ve = ", ve
-            self.conditions.add(VeValidator(ve))
+    def __init__(self):
+        self.mCondition = None
+        self.mCollector = None
+        self.mLogFile = None
 
-        if fr != "":
-            print "add condition: fr = ", fr
-            self.conditions.add(FrValidator(fr))
+    def init(self, inputFile, outputFile, conditionFile) :
+        fp = open(conditionFile, "r")
+        content = fp.read()
+        self.mCondition = Condition(json.loads(content))
 
-        if host != "":
-            print "add condition: host = ", host
-            self.conditions.add(HostValidator(host))
+        self.mLogFile = open(inputFile, "r")
 
-        if req_from != "":
-            print "add condition: req_from = ", req_from
-            self.conditions.add(FromValidator(req_from))
-
-        if location != "/?":
-            print "add condition: location = ", location
-            self.conditions.add(LocationValidator(location))
-
-    def init(self, ipListFile, inputFiles, outputFile) :
-        print "input files:", inputFiles
-        self.outputFile = outputFile
-        ipReader = FileListReader()
-        ipReader.init([ipListFile])
-        self.buildIpSet(ipReader)
-
-        self.logReader = FileListReader()
-        self.logReader.init(inputFiles)
-
-    def buildIpSet(self, ipReader):
-        self.set = set()
-        for line in ipReader.getLine():
-            ip, count = line.split('/')
-            self.set.add(ip2net(ip, int(count)))
-
-    def valid(self, record):
-        for cond in self.conditions:
-            if not cond.isValid(record):
-                print "record[", record,"] failed at [", cond, "]"
-                return False
-        return True
-
-    def belong(self, record):
-        for i in range(0,32):
-            ip_int_tuple = ip2net(record.remoteAddr, i)
-            if ip_int_tuple in self.set:
-                return True
-        return False
+        if self.mCollector == None:
+            self.mCollector = DefaultCollector()
+        self.mCollector.init(outputFile)
 
     def run(self):
         log_parser = LogParser()
-        collector = Collector()
-        collector.init()
         i=0
-        for line in self.logReader.getLine():
+        for line in self.mLogFile:
             i += 1
             if i%10000 == 0:
                 print "i:", i, "\r",
             record = log_parser.parse(line)
 
-            if not self.valid(record) :
+            if not self.mCondition.judge(record) :
                 print "discard line:", line
                 continue
-            if self.belong(record) :
-                collector.put(record)
-        collector.dump(self.outputFile)
+            self.mCollector.put(record)
+        self.mCollector.dump()
 
 
 
@@ -307,52 +250,202 @@ def read_ip_list(filename):
 
 
 
-if __name__ == '__main__':
-    line = '- 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /ucinput? HTTP/1.1" 200 0.004 "sugs.m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"'
+class VeValidator:
+    def prefixCompare(self, str1, str2):
+        length = min(len(str1), len(str2))
+        for i in range(0, length):
+            if str1[i] != str2[i]:
+                return False
+        return True
+
+    def __init__(self, veList):
+        self.veList = veList
+    def isValid(self, record):
+        for item in self.veList:
+            if self.prefixCompare(record.urlObj.ve, item):
+                return True
+        return False
+
+    def __str__(self):
+        return "VeValidator " + str(self.veList) + " "
+
+class LocationValidator:
+    def __init__(self, locationList):
+        self.locationList = locationList
+
+    def isValid(self, record):
+        for item in self.locationList:
+            if record.urlObj.location == item:
+                return True
+        return False
+
+    def __str__(self):
+        return "LocationValidator " + str(self.locationList) + " "
+
+class FrValidator:
+    def __init__(self, frList):
+        self.frList = frList
+
+    def isValid(self, record):
+        for item in self.frList:
+            if record.urlObj.fr == item:
+                return True
+        return False
+
+    def __str__(self):
+        return "FrValidator " + str(self.frList) + " "
+
+class FromValidator:
+    def __init__(self, reqFromList):
+        self.reqFromList = reqFromList
+    def isValid(self, record):
+        for item in self.reqFromList:
+            if record.urlObj.reqFrom == item:
+                return True
+        return False
+
+    def __str__(self):
+        return "FromValidator " + str(self.reqFromList) + " "
+
+class HostValidator:
+    def __init__(self, hostList):
+        self.hostList = hostList
+    def isValid(self, record):
+        for item in self.hostList:
+            if record.host == item:
+                return True
+        return False
+
+    def __str__(self):
+        return "HostValidator " + str(self.hostList) + " "
+
+class IpValidator:
+    def __init__(self, ipListFileList):
+        self.ipSet = set()
+        for ipListFile in ipListFileList:
+            ipListFilep = open(ipListFile, "r")
+            for line in ipListFilep:
+                ip, count = line.split('/')
+                self.ipSet.add(ip2net(ip, int(count)))
+            ipListFilep.close()
+
+
+    def isValid(self, record):
+        for i in range(0,32):
+            ip_int_tuple = ip2net(record.remoteAddr, i)
+            if ip_int_tuple in self.ipSet:
+                return True
+        return False
+
+    def __str__(self):
+        return "IpValidator "
+
+class TimeValidator:
+    def __init__(self, timeRange):
+        self.startTime = TimeStamp("")
+        self.endTime = TimeStamp("")
+
+        startMin, startSec = timeRange[0].split(":")
+        self.startTime.minite = int(startMin)
+        self.startTime.second = int(startSec)
+
+        endMin, endSec = timeRange[1].split(":")
+        self.endTime.minite = int(endMin)
+        self.endTime.second = int(endSec)
+
+    def timeCompare(self, time1, time2):
+        if (time1.minite < time2.minite):
+            return -1
+        if (time1.minite > time2.minite):
+            return 1
+        # equal minite
+        if (time1.second < time2.second):
+            return -1
+        if (time1.second > time2.second):
+            return 1
+        return 0
+
+
+    def isValid(self, record):
+        if (self.timeCompare(self.startTime, record.timestamp) <= 0
+                and self.timeCompare(self.endTime, record.timestamp) > 0):
+            return True
+        return False
+
+    def __str__(self):
+        return "TimeValidator from " + str(self.startTime) + " to " + str(self.endTime)
+
+
+
+class Condition:
+    def __init__(self, conditions):
+        self.mConditions = conditions
+        self.mValidatorMap = {
+                "location" : LocationValidator(conditions["location"]),
+                "from" : FromValidator(conditions["from"]) ,
+                "fr" : FrValidator(conditions["fr"]),
+                "ve" : VeValidator(conditions["ve"]),
+                "host" : HostValidator(conditions["host"]),
+                "ip" : IpValidator(conditions["ip"]),
+                "time_range" : TimeValidator(conditions["time_range"]),
+                }
+        return
+
+    def judge(self, record):
+        print "for debug:", str(record)
+        for key in self.mConditions:
+            validator = self.mValidatorMap[key]
+            if (validator != None and not validator.isValid(record)):
+                print "record[\n", record,"\n] failed at [", str(validator), "]"
+                return False
+        return True
+
+
+
+def test():
+    fp = open("./condition.json", "r")
+    content = fp.read()
+    condition = Condition(json.loads(content))
+
+
+    line = '- 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /s?q=qq&fr=iphone&from=uczj&ve=9.8.1.22 HTTP/1.1" 200 0.004 "m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"'
+
     log_parser = LogParser(True)
     record = log_parser.parse(line)
-    print record
+
+    assert condition.judge(record)
     sys.exit(0)
 
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print "Usage:", sys.argv[0], "-c condition.json -o output_file"
+        sys.exit(-1)
+    inputFile = ""
+    outputFile = ""
+    conditionFile = ""
     try:
-        options,args = getopt.getopt(sys.argv[1:], "h",["help", "ipListFile=", "inputList=", "output=", "ve=", "fr=", "from=", "host=", "location="])
+        options,args = getopt.getopt(sys.argv[1:], "hi:c:o:", ["help"])
         for name,value in options:
             if name in ("-h","--help"):
-                print "Usage:", sys.argv[0], "iplist input_files output_file"
+                print "Usage:", sys.argv[0], "-c condition.json -o output_file"
                 sys.exit(1)
-
-            if name in ("--ipListFile"):
-                print 'iplist is----',value
-                ipListFile = value
-            if name in ("--inputList"):
-                print 'inputList is----',value
-                inputFiles = read_ip_list(value)
-            if name in ("--output"):
-                print 'output is----',value
+            if name in ("-i"):
+                inputFile = value
+            if name in ("-o"):
                 outputFile = value
-
-            if name in ("--ve"):
-                print 've is----',value
-                ve = value
-            if name in ("--host"):
-                print 'host is----',value
-                host = value
-            if name in ("--fr"):
-                print 'fr is----',value
-                fr = value
-            if name in ("--from"):
-                print 'from is----',value
-                req_from = value
-            if name in ("--location"):
-                print 'location is----',value
-                location = "/" + value + "?"
-
+            if name in ("-c"):
+                conditionFile = value
     except getopt.GetoptError, e:
         print "error:", e, str(getopt.GetoptError)
         sys.exit(1)
 
-    e = Executor(ve, fr, host, req_from, location)
-    if e.init(ipListFile, inputFiles, outputFile) == False:
+    if inputFile == "":
+        print "inputFile is null "
+        sys.exit(-1)
+
+    e = Executor()
+    if e.init(inputFile, outputFile, conditionFile) == False:
         print "init executor failed"
 
     if e.run() == False :

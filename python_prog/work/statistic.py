@@ -12,3 +12,4 @@ if __name__ == '__main__':
     fp = open("output", "r")
     for line in fp:
         record = logParser.parse(line)
+
