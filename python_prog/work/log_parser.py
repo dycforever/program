@@ -179,7 +179,8 @@ class FileListReader :
 
 class DefaultCollector:
     def init(self, outputFile):
-        pass
+        self.mOutputFile = outputFile
+
     def put(self, record):
         pass
     def dump(self):
@@ -232,7 +233,7 @@ class Executor :
             record = log_parser.parse(line)
 
             if not self.mCondition.judge(record) :
-                print "discard line:", line
+#                print "discard line:", line
                 continue
             self.mCollector.put(record)
         self.mCollector.dump()
@@ -260,6 +261,7 @@ class VeValidator:
 
     def __init__(self, veList):
         self.veList = veList
+
     def isValid(self, record):
         for item in self.veList:
             if self.prefixCompare(record.urlObj.ve, item):
@@ -375,11 +377,8 @@ class TimeValidator:
     def __str__(self):
         return "TimeValidator from " + str(self.startTime) + " to " + str(self.endTime)
 
-
-
-class Condition:
+class ValidatorRegister:
     def __init__(self, conditions):
-        self.mConditions = conditions
         self.mValidatorMap = {
                 "location" : LocationValidator(conditions["location"]),
                 "from" : FromValidator(conditions["from"]) ,
@@ -391,12 +390,28 @@ class Condition:
                 }
         return
 
+    def getValidator(self, cond):
+        if (cond in self.mValidatorMap.keys()):
+            return self.mValidatorMap[cond]
+        else:
+            return None
+
+
+
+class Condition:
+    def __init__(self, conditions):
+        register = ValidatorRegister(conditions)
+        self.mValidatorMap = {}
+        for key in conditions.keys():
+            self.mValidatorMap[key] = register.getValidator(key)
+
+        return
+
     def judge(self, record):
-        print "for debug:", str(record)
-        for key in self.mConditions:
+        for key in self.mValidatorMap:
             validator = self.mValidatorMap[key]
             if (validator != None and not validator.isValid(record)):
-                print "record[\n", record,"\n] failed at [", str(validator), "]"
+#                print "record[\n", record,"\n] failed at [", str(validator), "]"
                 return False
         return True
 
@@ -406,9 +421,9 @@ def test():
     fp = open("./condition.json", "r")
     content = fp.read()
     condition = Condition(json.loads(content))
-
-
     line = '- 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /s?q=qq&fr=iphone&from=uczj&ve=9.8.1.22 HTTP/1.1" 200 0.004 "m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"'
+
+# test_data: - 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /ucinput? HTTP/1.1" 200 0.004 "sugs.m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"
 
     log_parser = LogParser(True)
     record = log_parser.parse(line)
@@ -451,6 +466,5 @@ if __name__ == '__main__':
     if e.run() == False :
         print "run failed"
 
-# test_data: - 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /ucinput? HTTP/1.1" 200 0.004 "sugs.m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"
 
 
