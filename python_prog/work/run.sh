@@ -1,21 +1,4 @@
-#!/usr/bin/bash
-
-source run.conf
-
-if [ ! -f run.conf ]; then
-    echo "error! can not find run.conf"
-        exit 1
-fi
-
-pid=$$
-./argparser.py ipList=$ipList \
-                inputList=$inputList \
-                --output=_statistics.out.$pid \
-                --fr=$fr \
-                --reqFrom=$from \
-                --ve=$ve \
-                --host=$host \
-                --location=$location && \
-sort -n _statistics.out.$pid > $output 
-rm -rf _statistics.out.$pid
-
+#!/bin/bash
+python main.py -i susp.data -c condition.json -o main.output
+#python main.py -i debug.data -c condition.json -o main.output
+#python main.py -i test.data -c condition.json -o main.output

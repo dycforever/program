@@ -1,12 +1,19 @@
 #!/usr/bin/python
 
-env = Environment(CPPPATH = ['.'])
-deplibs=["common", "pthread"]
+env = Environment()
+deplibs=["common", "pthread", "log4c"]
 
-Repository("/home/dyc/github/program/common")
+include_dir = [ '.', '/home/dyc/tools/log4c/include', 
+                '/home/dyc/github/program/common', 
+                '/home/dyc/github/program/common/thread', 
+                '/home/dyc/github/program/common/utils']
 
-env.Program('partioner.cpp', 
-        LIBPATH=['.', "/home/dyc/github/common"],
+lib_dir = ['.', "/home/dyc/github/program/common",
+        "/home/dyc/tools/log4c/lib/"]
+
+env.Program('partitioner.cpp', 
+        CPPPATH = [include_dir],
+        LIBPATH=lib_dir,
         LIBS=deplibs)
 
 env = Environment(tools=['default', 'packaging'])
@@ -22,28 +29,4 @@ env.Install(install='/home/ding/test/bin/', source='partioner')
 #        X_RPM_GROUP    = 'Application/fu',
 #        )
 
-# env.Library(target = 'partitioner',
-#              source = partitioner_sources,
-#              dirInPackage = 'lib64')
-# 
-# util_sources = [str(fn) for fn in Glob('util/*.cpp')]
-# env.Library(target = 'util',
-#              source = util_sources,
-#              dirInPackage = 'lib64')
-# 
-# 
-# libsname=[
-#      'partitioner',
-#      'anet',
-#      'util',
-#      'alog',
-#      'amonitor_client',
-#      'protobuf',
-#      'arpc',
-#      'autil',
-#      'pthread'
-# ]
-# 
-# #Repository('/home/dingyc/program/cpp/', '/home/dingyc/program/cpp/util')
-# env.Program("partitioner", "main.cpp", LIBPATH=["."], LIBS=libsname)
 

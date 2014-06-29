@@ -1,25 +1,32 @@
 import sys;
 import getopt
+import time
+
 from log_parser import Executor
 from log_parser import DefaultCollector
 
 class InfoCollector(DefaultCollector):
     def init(self, output):
-        self.count = 0
+        self.outFile = open("normal.data", "w")
+        self.countMap = {}
 
     def put(self, record):
-        print "call put"
-        if (record.urlObj.fr == "iphone"):
-            self.count += 1
+        self.outFile.write(record.originLine)
+        if (record.urlObj.fr not in self.countMap.keys()):
+            self.countMap[record.urlObj.fr] = 1
+        else:
+            self.countMap[record.urlObj.fr] += 1
 
     def dump(self):
-        print "count: ", self.count
-
+        for k, v in self.countMap.items():
+            print "%s : %d" %(k, v)
+        self.outFile.close()
 
 
 if len(sys.argv) < 2:
     print "Usage:", sys.argv[0], "-i inputfile -c condition.json -o output_file"
     sys.exit(-1)
+
 inputFile = ""
 outputFile = ""
 conditionFile = ""
@@ -48,8 +55,12 @@ e.mCollector = InfoCollector()
 if e.init(inputFile, outputFile, conditionFile) == False:
     print "init executor failed"
 
+begin = time.time()
 if e.run() == False :
     print "run failed"
+e.info()
 
+end = time.time()
+print end - begin
 
 

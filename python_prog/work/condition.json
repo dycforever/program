@@ -1,11 +1,5 @@
 
 {
     "location" : ["s"], 
-    "from" : [], 
-    "fr" : ["iphone"], 
-    "ve" : [], 
-
-    "host" : [], 
-    "ip" : [],
-    "time_range" : ["21:25", "21:26"]
+    "time_range" : ["25:00", "37:00"]
 }
