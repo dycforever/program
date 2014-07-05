@@ -1,12 +1,26 @@
 #!/usr/bin/python
 
+include_dir = [ '/home/dyc/github/program/netlib/net_client',
+                '/home/dyc/github/program/netlib/net_client/utils',
+                '/home/dyc/github/program/netlib/net_client/tools',
+                '/home/dyc/tools/zlib/include', 
+                '/home/dyc/tools/log4c/include', 
+                '/home/dyc/github/program/common', 
+                '/home/dyc/github/program/common/thread', 
+                '/home/dyc/github/program/common/utils']
+
+lib_dir = ['.', 
+            "/home/dyc/github/program/common", 
+            "/home/dyc/github/program/netlib/net_client", 
+            "/home/dyc/tools/zlib/lib", 
+            "/home/dyc/tools/log4c/lib"
+            ]
+
 env = Environment(CPPPATH = ['.'])
 deplibs=["common", "pthread"]
 
-Repository("/home/dyc/github/program/common")
-
 env.Program('partioner.cpp', 
-        LIBPATH=['.', "/home/dyc/github/common"],
+        LIBPATH=lib_dir,
         LIBS=deplibs)
 
 env = Environment(tools=['default', 'packaging'])
