@@ -17,7 +17,7 @@ class URLObject:
         self.eid= ''
     def __str__(self):
         desc = "url location ==> %s \n  ve ==> %s \n  fr ==> %s\n" % (self.location, self.ve, self.fr)
-        desc += "  from ==> %s \n " % (self.reqFrom)
+        desc += "  from ==> %s " % (self.reqFrom)
         return desc
 
 
@@ -27,7 +27,7 @@ class URLParser:
         url = URLObject()
         locationEnd = urlStr.find('?')
         url.location = urlStr[1:locationEnd]
-        url.querys = urlStr[locationEnd:].split('&')
+        url.querys = urlStr[locationEnd+1 : ].split('&')
         url.ve = ""
         url.fr = ""
         url.reqFrom = ""
@@ -67,7 +67,8 @@ class TimeStamp:
         self.second = ""
         if (line == None or line == ""):
             return
-        minStart = line.find(':') + 1
+        hourStart = line.find(':') + 1
+        minStart = line.find(':', hourStart) + 1
         self.minite = int(line[minStart : minStart + 2]);
         secStart = line.find(':', minStart + 1) + 1
         self.second = int(line[secStart : secStart + 2]);
@@ -77,6 +78,8 @@ class TimeStamp:
 
 class Record:
     def __init__(self):
+        self.originLine = ''
+
         self.xff = ''
         self.remoteAddr = ''
         self.timestamp = None
@@ -101,6 +104,7 @@ class Record:
 class LogParser:
     def parse(self, line):
         record = Record()
+        record.originLine = line
 
         # parse xff and remote address
         ipsEnd = line.find("[") - 1
@@ -179,7 +183,8 @@ class FileListReader :
 
 class DefaultCollector:
     def init(self, outputFile):
-        pass
+        self.mOutputFile = outputFile
+
     def put(self, record):
         pass
     def dump(self):
@@ -211,6 +216,10 @@ class Executor :
         self.mCollector = None
         self.mLogFile = None
 
+        # info
+        self.dealCount = 0
+        self.discardCount = 0
+
     def init(self, inputFile, outputFile, conditionFile) :
         fp = open(conditionFile, "r")
         content = fp.read()
@@ -224,20 +233,21 @@ class Executor :
 
     def run(self):
         log_parser = LogParser()
-        i=0
         for line in self.mLogFile:
-            i += 1
-            if i%10000 == 0:
-                print "i:", i, "\r",
+            self.dealCount += 1
+#            if self.dealCount % 1000 == 0:
+#                print "\rdeal count : ", self.dealCount,
             record = log_parser.parse(line)
 
             if not self.mCondition.judge(record) :
-                print "discard line:", line
+                self.discardCount += 1
+#                print "discard line:", line
                 continue
             self.mCollector.put(record)
         self.mCollector.dump()
 
-
+    def info(self):
+        print "deal count: %d   discard count: %d" % (self.dealCount, self.discardCount)
 
 
 def toList(filelist):
@@ -260,6 +270,7 @@ class VeValidator:
 
     def __init__(self, veList):
         self.veList = veList
+
     def isValid(self, record):
         for item in self.veList:
             if self.prefixCompare(record.urlObj.ve, item):
@@ -375,28 +386,50 @@ class TimeValidator:
     def __str__(self):
         return "TimeValidator from " + str(self.startTime) + " to " + str(self.endTime)
 
+# class ValidatorRegister:
+#     def __init__(self, conditions):
+#         self.mValidatorNameMap = {
+#                 "location" : LocationValidator(conditions["location"]),
+#                 "from" : FromValidator(conditions["from"]) ,
+#                 "fr" : FrValidator(conditions["fr"]),
+#                 "ve" : VeValidator(conditions["ve"]),
+#                 "host" : HostValidator(conditions["host"]),
+#                 "ip" : IpValidator(conditions["ip"]),
+#                 "time_range" : TimeValidator(conditions["time_range"]),
+#                 }
+#         return
+#
+#     def getValidator(self, cond):
+#         if (cond in self.mValidatorMap.keys()):
+#             return self.mValidatorMap[cond]
+#         else:
+#             return None
+
 
 
 class Condition:
     def __init__(self, conditions):
-        self.mConditions = conditions
-        self.mValidatorMap = {
-                "location" : LocationValidator(conditions["location"]),
-                "from" : FromValidator(conditions["from"]) ,
-                "fr" : FrValidator(conditions["fr"]),
-                "ve" : VeValidator(conditions["ve"]),
-                "host" : HostValidator(conditions["host"]),
-                "ip" : IpValidator(conditions["ip"]),
-                "time_range" : TimeValidator(conditions["time_range"]),
+        validatorNameMap = {
+                "location" : "LocationValidator",
+                "from" : "FromValidator" ,
+                "fr" : "FrValidator",
+                "ve" : "VeValidator",
+                "host" : "HostValidator",
+                "ip" : "IpValidator",
+                "time_range" : "TimeValidator"
                 }
+
+        self.mValidatorMap = {}
+        for key in conditions.keys():
+            validatorClass = getattr(sys.modules[__name__], validatorNameMap[key])
+            self.mValidatorMap[key] = validatorClass(conditions[key])
         return
 
     def judge(self, record):
-        print "for debug:", str(record)
-        for key in self.mConditions:
+        for key in self.mValidatorMap:
             validator = self.mValidatorMap[key]
             if (validator != None and not validator.isValid(record)):
-                print "record[\n", record,"\n] failed at [", str(validator), "]"
+#                print "record[\n", record,"\n] failed at [", str(validator), "] \n"
                 return False
         return True
 
@@ -406,9 +439,9 @@ def test():
     fp = open("./condition.json", "r")
     content = fp.read()
     condition = Condition(json.loads(content))
-
-
     line = '- 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /s?q=qq&fr=iphone&from=uczj&ve=9.8.1.22 HTTP/1.1" 200 0.004 "m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"'
+
+# test_data: - 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /ucinput? HTTP/1.1" 200 0.004 "sugs.m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"
 
     log_parser = LogParser(True)
     record = log_parser.parse(line)
@@ -419,7 +452,7 @@ def test():
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print "Usage:", sys.argv[0], "-c condition.json -o output_file"
+        print "Usage:", sys.argv[0], "-i inputfile -c condition.json -o output_file"
         sys.exit(-1)
     inputFile = ""
     outputFile = ""
@@ -428,7 +461,7 @@ if __name__ == '__main__':
         options,args = getopt.getopt(sys.argv[1:], "hi:c:o:", ["help"])
         for name,value in options:
             if name in ("-h","--help"):
-                print "Usage:", sys.argv[0], "-c condition.json -o output_file"
+                print "Usage:", sys.argv[0], "-i inputfile -c condition.json -o output_file"
                 sys.exit(1)
             if name in ("-i"):
                 inputFile = value
@@ -451,6 +484,7 @@ if __name__ == '__main__':
     if e.run() == False :
         print "run failed"
 
-# test_data: - 114.94.139.52 [26/Jun/2014:21:25:00 +0800] "POST /ucinput? HTTP/1.1" 200 0.004 "sugs.m.sm.cn" "refer" "UCWEB/9.7.1.450 CFNetwork/672.1.14 Darwin/14.0.0" "10.99.76.63:7650" "200" "0.002"
+    e.info()
+
 
 

@@ -1,8 +1,9 @@
 
-#include "common.h"
-
-#include <service_args.h>
 #include <fstream>
+#include <sstream>
+#include <sys/sendfile.h>
+
+#include "cmd_args.h"
 
 using namespace std;
 using namespace dyc;
@@ -13,7 +14,10 @@ int checkPos (FILE* fp, off_t pos, char c) {
     fseek(fp, pos, SEEK_SET);
     char cc;
     fread(&cc, 1, 1, fp);
-    CHECK(cc == c, "fail in check pos[%ld] char[%c]", pos, cc);
+    if (cc != c) {
+        printf("fail in check pos[%ld] char[%c]", pos, cc);
+        assert(false);
+    }
 }
 
 
@@ -30,7 +34,7 @@ void findchar(FILE* fp, off_t start, vector<off_t>& delimiters) {
                 DEBUG("PUSH file over %ld", start + hasRead + readCount);
                 delimiters.push_back(start + hasRead + readCount);
             } else {
-                FATAL_ERROR("read failed:");
+                FATAL("read failed:");
                 delimiters.push_back(-1);
             }
             break;
@@ -50,7 +54,7 @@ void findchar(FILE* fp, off_t start, vector<off_t>& delimiters) {
 
 
 int main(int argc, char** argv) {
-    ServiceArgs args;
+    CmdArgs args;
     if (!args.Parse(argc, argv)) {
         args.PrintHelp();
         return 0;
@@ -68,13 +72,15 @@ int main(int argc, char** argv) {
 
     FILE* fp = fopen(filename.c_str(), "r");
 
-    for (int i=0; i<partCount; ++i) {
-        findchar(fp, (i)*partSize, delimiters);
+    for (int i=1; i<partCount; ++i) {
+        findchar(fp, i * partSize, delimiters);
     }
 
+    // confirm
     NOTICE("size: %ld", delimiters.size());
     assert(fseek(fp, 0, SEEK_SET) == 0);
     for (int i=0; i<delimiters.size(); i++) {
+//        std::cout << delimiters[i] << std::endl;
         if (delimiters[i] == -1) {
             FATAL("something wrong");
         } else if(delimiters[i] != fileSize) {
@@ -83,6 +89,50 @@ int main(int argc, char** argv) {
         }
     }
     fclose(fp);
+
+    // start points
+    std::vector<off_t> startPos;
+    startPos.push_back(0);
+    for (int i=0; i<delimiters.size(); i++) {
+        if (delimiters[i] != fileSize)
+            startPos.push_back(delimiters[i] + 1);
+        else 
+            startPos.push_back(fileSize);
+    }
+
+    // output parts
+    size_t size = 0;
+    int fdin = open(filename.c_str(), O_RDONLY);
+    if (fdin < 0) {
+        std::cout << "call output: " << fdin << " errno: " << errno << std::endl;
+        return -1;
+    }
+    for (int i=0; i < startPos.size(); i++) {
+        std::stringstream ss;
+        ss << "part." << i;
+        std::string outfile = ss.str();
+        off_t offset = startPos[i];
+        if (i != startPos.size() - 1)
+            size = startPos[i+1] - startPos[i];
+        else
+            size = fileSize - startPos[i];
+
+        int fdout = open(outfile.c_str(), O_WRONLY|O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP);
+        if (fdout < 0) {
+            std::cout << "open out: " << fdout << " errno: " << errno << strerror(errno) << std::endl;
+            return -1;
+        }
+
+//        std::cout << "offset: " << offset << " size: " << size << std::endl;
+        int ret = sendfile(fdout, fdin, &offset, size);
+        if (ret < 0) {
+            std::cout << "sendfile ret: " << ret << " errno: " << errno << strerror(errno) << std::endl;
+            return -1;
+        }
+        close(fdout);
+    }
+    close(fdin);
+
     printf("all over\n");
 }
 

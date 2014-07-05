@@ -1,9 +1,11 @@
 
-class ServiceArgs
+#include "common.h"
+
+class CmdArgs
 {
 public:
-    ServiceArgs();
-    ~ServiceArgs();
+    CmdArgs();
+    ~CmdArgs();
 
 public:
     bool Parse(int argc, char *argv[]);
@@ -25,14 +27,14 @@ private:
 };
 
 
-ServiceArgs::ServiceArgs()
+CmdArgs::CmdArgs()
     : mThreadPoolSize(24)
 {}
 
-ServiceArgs::~ServiceArgs()
+CmdArgs::~CmdArgs()
 {}
 
-bool ServiceArgs::Parse(int argc, char* argv[])
+bool CmdArgs::Parse(int argc, char* argv[])
 {
     int c;
     while((c = getopt(argc, argv, "i:t:")) != -1)
@@ -57,7 +59,7 @@ bool ServiceArgs::Parse(int argc, char* argv[])
     return true;
 }
 
-bool ServiceArgs::Validate()
+bool CmdArgs::Validate()
 {
     if(mInputFile.empty()) {
         return false;
@@ -65,9 +67,9 @@ bool ServiceArgs::Validate()
     return true;
 }
 
-void ServiceArgs::PrintHelp()
+void CmdArgs::PrintHelp()
 {
-    std::cerr <<"Usage:" << " partitioner -i ip_file -t thread_count" << std::endl;
+    std::cerr <<"Usage:" << " partitioner -i input_file -t thread_count" << std::endl;
 }
 
 
