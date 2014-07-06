@@ -13,7 +13,7 @@ CXXFLAGS=-O1 \
 export LDFLAGS=-lcommon -lpthread 
 export LIBRARY_PATH=../common
 
-srcFiles=eventfd.c ptrace.c
+srcFiles=eventfd.c ptrace.c tty.c 
 
 empty=
 source_suffix=.c
