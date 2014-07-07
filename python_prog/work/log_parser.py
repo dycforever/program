@@ -26,7 +26,10 @@ class URLParser:
         urlStr = urlStr.strip()
         url = URLObject()
         locationEnd = urlStr.find('?')
-        url.location = urlStr[1:locationEnd]
+        if locationEnd == -1:
+            url.location = urlStr[1:]
+        else:
+            url.location = urlStr[1:locationEnd]
         url.querys = urlStr[locationEnd+1 : ].split('&')
         url.ve = ""
         url.fr = ""
