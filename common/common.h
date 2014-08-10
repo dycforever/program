@@ -167,6 +167,21 @@ public:
 
 }; // namespace dyc 
 
+struct profiler{
+    profiler(const char* func_name){
+        gettimeofday(&tv, NULL);
+    }
+    ~profiler(){
+        struct timeval tv2;
+        gettimeofday(&tv2, NULL);
+        long cost = (tv.tv_sec - tv.tv_sec) * 1000000 + (tv.tv_usec - tv.tv_usec);
+        //! post to some manager
+    }
+    struct timeval tv;
+};
+
+#define PROFILER() profiler(__FUNCTION__)
+
 #define _DEBUG
 
 #ifdef _DEBUG

@@ -7,6 +7,7 @@
 
 namespace dyc {
 
+const char* errno2str(int errno_p);
 #ifdef STDOUT_LOG
 
 enum COLOR{BLACK=0,RED=1,GREEN=2,YELLOW=3,BLUE=4,WHITE=9};
@@ -36,7 +37,6 @@ private:
 
 extern DYC_GLOBAL dyc_global;
 
-const char* errno2str(int errno_p);
 const char* syscall2str(int );
 
 #define LOGOUT stdout
@@ -189,8 +189,15 @@ public:
 
 #define FATAL(format, arguments...) \
     do{ \
-        log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_FATAL, format, ##arguments);  \
+        log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_FATAL, "[%s:%d][%s()] " format, __FILE__, __LINE__, __FUNCTION__, ##arguments);  \
     } while(0)
+
+#define FATAL_ERROR(format, arguments...) \
+    do{ \
+        log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_FATAL, "[%s:%s][%s:%d][%s()] " format, errno2str(errno) ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments);  \
+    } while(0)
+
+
 
 #endif
 
