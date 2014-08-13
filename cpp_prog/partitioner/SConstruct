@@ -22,7 +22,8 @@ deplibs=["common", "pthread", "log4c"]
 env.Program('partitioner.cpp', 
         CPPPATH = include_dir,
         LIBPATH=lib_dir,
-        LIBS=deplibs)
+        LIBS=deplibs, 
+        LINKFLAGS = "-lprofiler")
 
 env = Environment(tools=['default', 'packaging'])
 env.Install(install='/home/ding/test/bin/', source='partioner')

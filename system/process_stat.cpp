@@ -32,10 +32,10 @@ int main() {
         printf("press key to new session:\n");
         fflush(stdout);
         getchar();
-        pid = setsid();
-        if (pid < 0) {
-            printf("errno = %d, %s\n", errno, strerror(errno));
-        }
+//        pid = setsid();
+//        if (pid < 0) {
+//            printf("errno = %d, %s\n", errno, strerror(errno));
+//        }
         // process state: Ss now
         printf ("session pid = %d\n", pid);
         fflush(stdout);
@@ -50,7 +50,8 @@ int main() {
     pthread_create(&tid, NULL, thread_function, NULL);
 
     c = getchar();
-    printf ("getchar: %c\n", c);
+    printf ("getchar: %c parent exit\n", c);
     fflush(stdout);
 }
+
 
