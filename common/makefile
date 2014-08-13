@@ -3,7 +3,7 @@
 
 VPATH=thread utils
 
-INCLUDE_PATH=/home/dyc/tools/log4c/include:/home/dyc/github/program/common:/home/dyc/github/program/common/utils
+INCLUDE_PATH=/home/dingyc/tools/log4c/include:/home/dingyc/github/program/common:/home/dingyc/github/program/common/utils
 export CPLUS_INCLUDE_PATH=$(INCLUDE_PATH)
 
 

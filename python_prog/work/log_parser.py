@@ -235,8 +235,8 @@ class Executor :
         log_parser = LogParser()
         for line in self.mLogFile:
             self.dealCount += 1
-#            if self.dealCount % 1000 == 0:
-#                print "\rdeal count : ", self.dealCount,
+            if self.dealCount % 100 == 0:
+                print "\rdeal count : ", self.dealCount/10000, " w",
             record = log_parser.parse(line)
 
             if not self.mCondition.judge(record) :
@@ -386,25 +386,6 @@ class TimeValidator:
     def __str__(self):
         return "TimeValidator from " + str(self.startTime) + " to " + str(self.endTime)
 
-# class ValidatorRegister:
-#     def __init__(self, conditions):
-#         self.mValidatorNameMap = {
-#                 "location" : LocationValidator(conditions["location"]),
-#                 "from" : FromValidator(conditions["from"]) ,
-#                 "fr" : FrValidator(conditions["fr"]),
-#                 "ve" : VeValidator(conditions["ve"]),
-#                 "host" : HostValidator(conditions["host"]),
-#                 "ip" : IpValidator(conditions["ip"]),
-#                 "time_range" : TimeValidator(conditions["time_range"]),
-#                 }
-#         return
-#
-#     def getValidator(self, cond):
-#         if (cond in self.mValidatorMap.keys()):
-#             return self.mValidatorMap[cond]
-#         else:
-#             return None
-
 
 
 class Condition:
@@ -485,6 +466,4 @@ if __name__ == '__main__':
         print "run failed"
 
     e.info()
-
-
 

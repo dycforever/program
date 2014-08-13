@@ -6,8 +6,8 @@ from log_parser import Executor
 from log_parser import DefaultCollector
 
 class InfoCollector(DefaultCollector):
-    def init(self, output):
-        self.outFile = open("normal2.data", "w")
+    def init(self, outputFilename):
+        self.outFile = open(outputFilename, "w")
         self.countMap = {}
 
     def put(self, record):
