@@ -1,6 +1,6 @@
 all:cache_line
 
-export CPLUS_INCLUDE_PATH=-I../include
+export CPLUS_INCLUDE_PATH=-I/home/dyc/github/program/common
 
 cache_line:cache_line.cpp
 	g++ $(CPLUS_INCLUDE_PATH) $^ -o $@ 

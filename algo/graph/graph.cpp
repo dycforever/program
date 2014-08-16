@@ -28,7 +28,7 @@ int main(){
     Graph<int, int> g;
     FILE* fp = fopen("graph.db","r");
     if(fp == NULL){
-        FATAL("fp is null");
+        FATAL_LOG("fp is null");
     }
     parseMatrix(g,fp);
 //    debug<int, int>(g);

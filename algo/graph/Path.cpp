@@ -14,7 +14,7 @@ public:
     int init(){
         edgeTo = NEW int[m_graph.getVertexNumber()];
         if(edgeTo == NULL){
-            FATAL("new edgeTo failed");
+            FATAL_LOG("new edgeTo failed");
             return -1;
         }
         reset();
@@ -47,10 +47,10 @@ public:
                     edgeTo[*it] = node;
                     // 已经找到了通往目的结点v的路径，所以可以break了
                     if(*it == v){
-                        NOTICE("ok find");
+                        NOTICE_LOG("ok find");
                         return true;
                     }
-                    NOTICE("push ing");
+                    NOTICE_LOG("push ing");
                     q.push(*it);
                 }
                 ++it;
@@ -81,7 +81,7 @@ int main(){
     Graph<> g;
     FILE* fp = fopen("tinyG.txt","r");
     if(fp == NULL){
-        FATAL("fp is null");
+        FATAL_LOG("fp is null");
     }
 //    parseMatrix(g,fp);
 //    debug<int, int>(g);
@@ -90,6 +90,6 @@ int main(){
 
     Paths path(g, 0);
     cout << "0 has path to 4 ? : " << path.hasPathTo(4) << endl;
-    NOTICE("show path:");
+    NOTICE_LOG("show path:");
     path.pathTo(4);
 }

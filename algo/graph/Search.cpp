@@ -79,25 +79,25 @@ int main(){
     Graph<int> g;
     FILE* fp = fopen("tinyG.txt","r");
     if(fp == NULL){
-        FATAL("fp is null");
+        FATAL_LOG("fp is null");
     }
 //    parseMatrix(g,fp);
 //    debug<int, int>(g);
     parseByLine(g,fp);
     g.show();
     Search<int> search(g);
-    NOTICE("begin DFSsearch 0");
+    NOTICE_LOG("begin DFSsearch 0");
 //    search.DFSsearch(0);
-    NOTICE("begin DFSsearch 7");
+    NOTICE_LOG("begin DFSsearch 7");
 //    search.DFSsearch(7);
-    NOTICE("begin DFSsearch 9");
+    NOTICE_LOG("begin DFSsearch 9");
 //    search.DFSsearch(9);
 
-    NOTICE("begin BFSsearch 0");
+    NOTICE_LOG("begin BFSsearch 0");
     search.BFSsearch(0);
-    NOTICE("begin BFSsearch 7");
+    NOTICE_LOG("begin BFSsearch 7");
     search.BFSsearch(7);
-    NOTICE("begin BFSsearch 9");
+    NOTICE_LOG("begin BFSsearch 9");
     search.BFSsearch(9);
 }
 

@@ -1,5 +1,7 @@
 
 #include "common.h"
+#include "rawlog.h"
+
 using namespace dyc;
 using namespace std;
 
@@ -24,7 +26,7 @@ public:
 
     bool valid_at(const vector<int>& points, int level, int pos) {
         if (points.size() != level) {
-            FATAL("size[%lu] != level[%d]", points.size(), level);
+            FATAL_LOG("size[%lu] != level[%d]", points.size(), level);
         }
         for (int l=0; l<level; ++l) {
             if (points[l] == pos || abs(l-level) == abs(pos - points[l])) {

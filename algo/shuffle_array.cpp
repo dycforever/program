@@ -51,7 +51,7 @@ bool find(const vector<T>& vec, int start, int end, T target) {
 
 template<typename T>
 void enumerate_in_place(vector<T>& vec, int line){
-//    NOTICE("call emnuerate %d", line);
+//    NOTICE_LOG("call emnuerate %d", line);
     if(line == vec.size()-1){
         print(vec);
         return;
@@ -75,7 +75,7 @@ void enumerate_in_place(vector<T>& vec, int line){
 int main(int argc, char** argv){
     int count = 4;
     if (argc == 2){
-//        FATAL("argc must be 2, now: %d", argc);
+//        FATAL_LOG("argc must be 2, now: %d", argc);
 //        return -1;
         count = atoi(argv[1]);
     }

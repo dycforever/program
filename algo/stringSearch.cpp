@@ -1,4 +1,5 @@
 #include "common.h"
+#include "rawlog.h"
 
 using namespace dyc;
 
@@ -27,5 +28,5 @@ int kmp(char* text, char* pattern) {
 
 int main(){
     int ret = bruteForce("hahadyc", "dyc");
-    NOTICE("ret: %d ", ret);
+    NOTICE_LOG("ret: %d ", ret);
 }

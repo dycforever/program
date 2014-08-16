@@ -10,7 +10,7 @@ CXXFLAGS=-O1 \
 		 -Werror \
 		 -fPIC
 
-export LDFLAGS=-lcommon -lpthread 
+export LDFLAGS=-lcommon -lpthread -lrawlog
 export LIBRARY_PATH=../common
 
 srcFiles=shuffle_array.cpp BinarySearchST.cpp quicksort.cpp stringSearch.cpp eightQueue.cpp 3sum.cpp generateNumber.cpp
