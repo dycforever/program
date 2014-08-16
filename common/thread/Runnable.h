@@ -2,7 +2,7 @@
 #ifndef __RUNNABLE_INCLUDE__
 #define __RUNNABLE_INCLUDE__
 
-namespace ipServer {
+namespace dyc {
 
 class Runnable
 {

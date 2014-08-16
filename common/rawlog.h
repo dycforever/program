@@ -1,14 +1,16 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#ifndef STDOUT_LOG
+#include <iostream>
+
+#ifdef USE_LOG4C
 #include "log4c.h"
 #endif
 
 namespace dyc {
 
 const char* errno2str(int errno_p);
-#ifdef STDOUT_LOG
+#ifndef USE_LOG4C
 
 enum COLOR{BLACK=0,RED=1,GREEN=2,YELLOW=3,BLUE=4,WHITE=9};
 enum Format{BOLD=1,NORMAL,UNDERSCORE=4,REVERSE=7,DELETE=9};
@@ -41,65 +43,65 @@ const char* syscall2str(int );
 
 #define LOGOUT stdout
 
-#define DEBUG(format, arguments...) \
+#define DEBUG_LOG(format, arguments...) \
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(BLUE); \
-        fprintf(LOGOUT," [DEBUG]  "); \
+        fprintf(LOGOUT," [DEBUG_LOG]  "); \
         UNPRINT_COLOR(); \
         fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
         fflush(LOGOUT);\
         dyc_global.unlock(); \
     }while(0)
 
-#define TRACE(format, arguments...) \
+#define TRACE_LOG(format, arguments...) \
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(GREEN); \
-        fprintf(LOGOUT,"[TRACE]\t"); \
+        fprintf(LOGOUT,"[TRACE_LOG]\t"); \
         UNPRINT_COLOR(); \
         fprintf(LOGOUT,format"\n", ##arguments);\
         dyc_global.unlock(); \
     }while(0)
 
-#define INFO(format, arguments...) \
+#define INFO_LOG(format, arguments...) \
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(GREEN); \
-        fprintf(LOGOUT," [INFO] "); \
-        UNPRINT_COLOR(); \
-        fprintf(LOGOUT,format"\n", ##arguments);\
-        fflush(LOGOUT);\
-        dyc_global.unlock(); \
-    }while(0)
-
-#define NOTICE(format, arguments...) \
-    do{ \
-        dyc_global.lock(); \
-        PRINT_COLOR(GREEN); \
-        fprintf(LOGOUT," [NOTICE] "); \
+        fprintf(LOGOUT," [INFO_LOG] "); \
         UNPRINT_COLOR(); \
         fprintf(LOGOUT,format"\n", ##arguments);\
         fflush(LOGOUT);\
         dyc_global.unlock(); \
     }while(0)
 
-#define WARN(format, arguments...) \
+#define NOTICE_LOG(format, arguments...) \
+    do{ \
+        dyc_global.lock(); \
+        PRINT_COLOR(GREEN); \
+        fprintf(LOGOUT," [NOTICE_LOG] "); \
+        UNPRINT_COLOR(); \
+        fprintf(LOGOUT,format"\n", ##arguments);\
+        fflush(LOGOUT);\
+        dyc_global.unlock(); \
+    }while(0)
+
+#define WARN_LOG(format, arguments...) \
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(YELLOW); \
-        fprintf(LOGOUT,"[WARN] "); \
+        fprintf(LOGOUT,"[WARN_LOG] "); \
         UNPRINT_COLOR(); \
         fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
         fflush(LOGOUT);\
         dyc_global.unlock(); \
     } while(0)
 
-#define FATAL(format, arguments...) \
+#define FATAL_LOG(format, arguments...) \
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(RED); \
-        fprintf(LOGOUT," [FATAL]  "); \
+        fprintf(LOGOUT," [FATAL_LOG]  "); \
         UNPRINT_COLOR(); \
         fprintf(LOGOUT,"[%s:%d][%s()] " format"\n", __FILE__, __LINE__, __FUNCTION__, ##arguments); \
         fflush(LOGOUT);\
@@ -110,7 +112,7 @@ const char* syscall2str(int );
     do{ \
         dyc_global.lock(); \
         PRINT_COLOR(RED); \
-        fprintf(LOGOUT," [FATAL]  "); \
+        fprintf(LOGOUT," [FATAL_LOG]  "); \
         UNPRINT_COLOR(); \
         fprintf(LOGOUT,"[%s:%s][%s:%d][%s()] " format"\n", errno2str(errno) ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments); \
         fflush(LOGOUT);\
@@ -120,13 +122,13 @@ const char* syscall2str(int );
 
 #define CHECK(cond, fmt, arg...) do { \
     if (!(cond)) {   \
-        FATAL(fmt, ##arg);  \
+        FATAL_LOG(fmt, ##arg);  \
     } \
 } while(0)
 
 #define CHECK_ERROR(ret, cond, fmt, arg...) do { \
     if (!(cond)) {   \
-        FATAL(fmt, ##arg);  \
+        FATAL_LOG(fmt, ##arg);  \
         return (ret);  \
     } \
 } while(0)
@@ -140,13 +142,13 @@ const char* syscall2str(int );
 
 #define CHECK_WARN(ret, cond, fmt, arg...) do { \
     if (!(cond)) {   \
-        WARN(fmt, ##arg);  \
+        WARN_LOG(fmt, ##arg);  \
         return (ret);  \
     } \
 } while(0)
 
 
-#else  // if not define STDOUT_LOG
+#else  // if not define USE_LOG4C
 
 extern log4c_category_t* gDYCLogObj;
 
@@ -162,32 +164,32 @@ public:
     }
 };
 
-#define DEBUG(format, arguments...) \
+#define DEBUG_LOG(format, arguments...) \
     do{ \
         log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_DEBUG, format, ##arguments);  \
     }while(0)
 
-#define TRACE(format, arguments...) \
+#define TRACE_LOG(format, arguments...) \
     do{ \
         log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_TRACE, format, ##arguments);  \
     }while(0)
 
-#define INFO(format, arguments...) \
+#define INFO_LOG(format, arguments...) \
     do{ \
         log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_INFO, format, ##arguments);  \
     }while(0)
 
-#define NOTICE(format, arguments...) \
+#define NOTICE_LOG(format, arguments...) \
     do{ \
         log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_NOTICE, format, ##arguments);  \
     }while(0)
 
-#define WARN(format, arguments...) \
+#define WARN_LOG(format, arguments...) \
     do{ \
         log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_WARN, format, ##arguments);  \
     } while(0)
 
-#define FATAL(format, arguments...) \
+#define FATAL_LOG(format, arguments...) \
     do{ \
         log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_FATAL, "[%s:%d][%s()] " format, __FILE__, __LINE__, __FUNCTION__, ##arguments);  \
     } while(0)

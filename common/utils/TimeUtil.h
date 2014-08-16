@@ -1,9 +1,9 @@
 #ifndef TIME_UTIL_H
 #define TIME_UTIL_H
 
-#include <common.h>
-#include <log.h>
 #include <sys/time.h>
+
+#include "common.h"
 
 namespace dyc {
 

@@ -1,6 +1,6 @@
 
-#ifndef _mutexH
-#define _mutexH
+#ifndef THREADLOCK_H
+#define THREADLOCK_H
 
 #include <boost/noncopyable.hpp>
 #include <assert.h>
@@ -90,8 +90,69 @@ class MutexLock : boost::noncopyable
     MutexLock& _owner;
   };
 
+};  // MutexLock
 
-};
+
+class SpinLock : boost::noncopyable {
+ public:
+  SpinLock()
+    : _holder(0) {
+    MCHECK(pthread_spin_init(&mSpinLock, PTHREAD_PROCESS_PRIVATE));
+  }
+
+  ~SpinLock() {
+    assert(_holder == 0);
+    MCHECK(pthread_spin_destroy(&mSpinLock));
+  }
+
+  // must be called when locked, i.e. for assertion
+  bool isLockedByThisThread() const {
+    return _holder == pthread_self();
+  }
+
+  void assertLocked() const {
+    assert(isLockedByThisThread());
+  }
+
+  // internal usage
+
+  void lock() {
+    MCHECK(pthread_spin_lock(&mSpinLock));
+    _holder = pthread_self();
+  }
+
+  void unlock() {
+    _holder = 0;
+    MCHECK(pthread_spin_unlock(&mSpinLock));
+  }
+
+  pthread_spinlock_t* getPthreadMutex() 
+  {
+    return &mSpinLock;
+  }
+
+ private:
+  pthread_spinlock_t mSpinLock;
+  pthread_t _holder;
+
+  class UnassignGuard : boost::noncopyable {
+   public:
+    UnassignGuard(SpinLock& owner)
+      : _owner(owner)
+    {
+      _owner._holder = 0;
+    }
+
+    ~UnassignGuard()
+    {
+      _owner._holder = pthread_self();
+    }
+
+   private:
+    SpinLock& _owner;
+  }; // UnassignGuard
+
+}; // SpinLock
 
 template<typename LOCK>
 class LockGuard : boost::noncopyable
@@ -113,6 +174,29 @@ class LockGuard : boost::noncopyable
   LOCK& _lock;
 };
 
+
+template<typename LOCK>
+class ScopedLock : boost::noncopyable
+{
+ public:
+  explicit ScopedLock(LOCK& lock)
+    : _lock(lock)
+  {
+    _lock.lock();
+  }
+
+  ~ScopedLock()
+  {
+    _lock.unlock();
+  }
+
+ private:
+
+  LOCK& _lock;
+};
+
+
+
 }
 
 // Prevent misuse like:
@@ -120,4 +204,4 @@ class LockGuard : boost::noncopyable
 // A tempory object doesn't hold the lock for long!
 #define LockGuard(x) error "Missing guard object name"
 
-#endif  // _mutexH
+#endif  // THREADLOCK_H
