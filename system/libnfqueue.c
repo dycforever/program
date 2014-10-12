@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <netdb.h>
 #include <netinet/in.h>
-#include <linux/types.h>
-#include <linux/netfilter.h>            /* for NF_ACCEPT */
+#include <arpa/inet.h>
 
+#include <asm/byteorder.h>
+#include <linux/netfilter.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
+#include <linux/ip.h>
+#include <linux/tcp.h>
 
 /* returns packet id */
 static u_int32_t print_pkt (struct nfq_data *tb)
@@ -63,74 +67,203 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 }
 
 
-static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
-        struct nfq_data *nfa, void *data)
-{
-    u_int32_t id = print_pkt(nfa);
-    printf("entering callback\n");
-    return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
+
+#ifdef __LITTLE_ENDIAN
+#define IPQUAD(addr) \
+    ((unsigned char *)&addr)[0],                  \
+((unsigned char *)&addr)[1],                \
+((unsigned char *)&addr)[2],                \
+((unsigned char *)&addr)[3]
+#else
+#define IPQUAD(addr)                            \
+    ((unsigned char *)&addr)[3],                  \
+((unsigned char *)&addr)[2],                \
+((unsigned char *)&addr)[1],                \
+((unsigned char *)&addr)[0]
+#endif
+
+static u_int16_t checksum(u_int32_t init, u_int8_t *addr, size_t count){
+    /* Compute Internet Checksum for "count" bytes
+     * beginning at location "addr".
+     */
+    u_int32_t sum = init;
+
+    while( count > 1 ) {
+        /* This is the inner loop */
+        sum += ntohs(* (u_int16_t*) addr);
+        addr += 2;
+        count -= 2;
+    }
+
+    /* Add left-over byte, if any */
+    if( count > 0 )
+        sum += * (u_int8_t *) addr;
+
+    /* Fold 32-bit sum to 16 bits */
+    while (sum>>16)
+        sum = (sum & 0xffff) + (sum >> 16);
+
+    return (u_int16_t)~sum;
 }
 
-int main(int argc, char **argv)
-{
+static u_int16_t ip_checksum(struct iphdr* iphdrp){
+    return checksum(0, (u_int8_t*)iphdrp, iphdrp->ihl<<2);
+}
+
+static void set_ip_checksum(struct iphdr* iphdrp){
+    iphdrp->check = 0;
+    iphdrp->check = htons(checksum(0, (u_int8_t*)iphdrp, iphdrp->ihl<<2));
+}
+
+static u_int16_t tcp_checksum2(struct iphdr* iphdrp, struct tcphdr* tcphdrp){
+    size_t tcplen = ntohs(iphdrp->tot_len) - (iphdrp->ihl<<2);
+    u_int32_t cksum = 0;
+
+    cksum += ntohs((iphdrp->saddr >> 16) & 0x0000ffff);
+    cksum += ntohs(iphdrp->saddr & 0x0000ffff);
+    cksum += ntohs((iphdrp->daddr >> 16) & 0x0000ffff);
+    cksum += ntohs(iphdrp->daddr & 0x0000ffff);
+    cksum += iphdrp->protocol & 0x00ff;
+    cksum += tcplen;
+    return checksum(cksum, (u_int8_t*)tcphdrp, tcplen);
+}
+
+static u_int16_t tcp_checksum1(struct iphdr* iphdrp){
+    struct tcphdr *tcphdrp = 
+        (struct tcphdr*)((u_int8_t*)iphdrp + (iphdrp->ihl<<2));
+
+    return tcp_checksum2(iphdrp, tcphdrp);
+}
+
+static void set_tcp_checksum2(struct iphdr* iphdrp, struct tcphdr* tcphdrp){
+    tcphdrp->check = 0;
+    tcphdrp->check = htons(tcp_checksum2(iphdrp, tcphdrp));
+}
+
+static void set_tcp_checksum1(struct iphdr* iphdrp){
+    struct tcphdr *tcphdrp = 
+        (struct tcphdr*)((u_int8_t*)iphdrp + (iphdrp->ihl<<2));
+
+    set_tcp_checksum2(iphdrp, tcphdrp);
+}
+
+static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
+        struct nfq_data *nfa, void *data){
+    (void)nfmsg;
+    (void)data;
+    u_int32_t id = 0;
+    struct nfqnl_msg_packet_hdr *ph;
+    unsigned char *pdata = NULL;
+    int pdata_len;
+
+    ph = nfq_get_msg_packet_hdr(nfa);
+    if (ph){
+        id = ntohl(ph->packet_id);
+    }
+
+    pdata_len = nfq_get_payload(nfa, (unsigned char**)&pdata);
+    if(pdata_len == -1){
+        pdata_len = 0;
+    }
+
+    struct iphdr *iphdrp = (struct iphdr *)pdata;
+
+    printf("len %d iphdr %d %u.%u.%u.%u ->",
+            pdata_len,
+            iphdrp->ihl<<2,
+            IPQUAD(iphdrp->saddr));
+    printf(" %u.%u.%u.%u %s",
+            IPQUAD(iphdrp->daddr),
+            getprotobynumber(iphdrp->protocol)->p_name);
+    printf(" ipsum %hu", ip_checksum(iphdrp));
+    if(iphdrp->protocol == IPPROTO_TCP){
+        printf(" tcpsum %hu", tcp_checksum1(iphdrp));
+    }
+
+#define TO "220.181.37.55"
+#define DNAT_TO "64.233.189.104"
+
+    if(iphdrp->daddr == inet_addr(TO)){
+        printf(" !hacked!");
+        iphdrp->daddr = inet_addr(DNAT_TO);
+        set_ip_checksum(iphdrp);
+        if(iphdrp->protocol == IPPROTO_TCP){
+            set_tcp_checksum1(iphdrp);
+            printf(" ipsum+ %hu tcpsum+ %hu",
+                    ip_checksum(iphdrp), tcp_checksum1(iphdrp));
+        }
+    }
+
+    if(iphdrp->saddr == inet_addr(DNAT_TO)){
+        iphdrp->saddr = inet_addr(TO);
+        printf(" !hacked!");
+        set_ip_checksum(iphdrp);
+        if(iphdrp->protocol == IPPROTO_TCP){
+            set_tcp_checksum1(iphdrp);
+            printf(" ipsum+ %hu tcpsum+ %hu",
+                    ip_checksum(iphdrp), tcp_checksum1(iphdrp));
+        }
+    }
+
+    printf("\n");
+
+    return nfq_set_verdict2(qh, id, NF_REPEAT, 1,
+            (u_int32_t)pdata_len, pdata);
+}
+
+int main(int argc, char **argv){
     struct nfq_handle *h;
     struct nfq_q_handle *qh;
     struct nfnl_handle *nh;
     int fd;
     int rv;
-    char buf[4096] __attribute__ ((aligned));
+    char buf[4096];
 
-    printf("opening library handle\n");
     h = nfq_open();
     if (!h) {
-        fprintf(stderr, "error during nfq_open()\n");
+        printf("open failed");
         exit(1);
     }
 
-    printf("unbinding existing nf_queue handler for AF_INET (if any)\n");
-    if (nfq_unbind_pf(h, AF_INET) < 0) {
-        fprintf(stderr, "error during nfq_unbind_pf()\n");
+    if (nfq_unbind_pf(h, AF_INET) < 0){
+        printf("unbind failed");
         exit(1);
     }
 
-    printf("binding nfnetlink_queue as nf_queue handler for AF_INET\n");
     if (nfq_bind_pf(h, AF_INET) < 0) {
-        fprintf(stderr, "error during nfq_bind_pf()\n");
+        printf("bind failed");
         exit(1);
     }
 
-    printf("binding this socket to queue '0'\n");
-    qh = nfq_create_queue(h,  0, &cb, NULL);
+    int qid = 0;
+    if(argc == 2){
+        qid = atoi(argv[1]);
+    }
+    printf("binding this socket to queue %d\n", qid);
+    qh = nfq_create_queue(h,  qid, &cb, NULL);
     if (!qh) {
-        fprintf(stderr, "error during nfq_create_queue()\n");
+        printf("create failed");
         exit(1);
     }
 
-    printf("setting copy_packet mode\n");
     if (nfq_set_mode(qh, NFQNL_COPY_PACKET, 0xffff) < 0) {
-        fprintf(stderr, "can't set packet_copy mode\n");
+        printf("set mode failed");
         exit(1);
     }
 
-    fd = nfq_fd(h);
+    nh = nfq_nfnlh(h);
+    fd = nfnl_fd(nh);
 
     while ((rv = recv(fd, buf, sizeof(buf), 0)) && rv >= 0) {
-        printf("pkt received\n");
+        printf("recv %d bytes\n", rv);
         nfq_handle_packet(h, buf, rv);
     }
 
-    printf("unbinding from queue 0\n");
+    /* never reached */
     nfq_destroy_queue(qh);
 
-#ifdef INSANE
-    /* normally, applications SHOULD NOT issue this command, since
-     * it detaches other programs/sockets from AF_INET, too ! */
-    printf("unbinding from AF_INET\n");
-    nfq_unbind_pf(h, AF_INET);
-#endif
-
-    printf("closing library handle\n");
     nfq_close(h);
 
     exit(0);
 }
+

@@ -3,7 +3,7 @@
 #include <dlfcn.h>
 
 int main() {
-    void* dl_handle = dlopen("./libdeleter.so", RTLD_LAZY);
+    void* dl_handle = dlopen("./hehe/libdeleter.so", RTLD_LAZY);
     if (dl_handle == NULL) {
         std::cerr << "dlopen ./libdeleter.so failed:" << std::endl;
         return -1;
@@ -19,7 +19,8 @@ int main() {
 
     MsgMap intMap;
     func(intMap, deleter);
-
+    while(1)
+        sleep(100);
 //    dlclose(dl_handle);
 //
 }

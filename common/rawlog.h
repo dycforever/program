@@ -1,5 +1,5 @@
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef DYC_RAW_LOG_H
+#define DYC_RAW_LOG_H
 
 #include <iostream>
 
@@ -24,17 +24,17 @@ inline void UNPRINT_COLOR(){
 class DYC_GLOBAL {
 public:
     DYC_GLOBAL() {
-        pthread_spin_init(&g_spin_lock, PTHREAD_PROCESS_PRIVATE);
+        pthread_spin_init(&mSpinLock, PTHREAD_PROCESS_PRIVATE);
     }
     void lock() {
-        pthread_spin_lock(&g_spin_lock); 
+        pthread_spin_lock(&mSpinLock); 
     }
 
     void unlock() {
-        pthread_spin_unlock(&g_spin_lock); 
+        pthread_spin_unlock(&mSpinLock); 
     }
 private:
-    pthread_spinlock_t g_spin_lock;
+    pthread_spinlock_t mSpinLock;
 };
 
 extern DYC_GLOBAL dyc_global;
@@ -148,7 +148,8 @@ const char* syscall2str(int );
 } while(0)
 
 
-#else  // if not define USE_LOG4C
+#else  
+// if define USE_LOG4C
 
 extern log4c_category_t* gDYCLogObj;
 
@@ -199,10 +200,8 @@ public:
         log4c_category_log(gDYCLogObj, LOG4C_PRIORITY_FATAL, "[%s:%s][%s:%d][%s()] " format, errno2str(errno) ,strerror(errno) , __FILE__, __LINE__, __FUNCTION__, ##arguments);  \
     } while(0)
 
-
-
 #endif
 
 } // namespace
 
-#endif // __LOG_H__
+#endif // DYC_RAW_LOG_H

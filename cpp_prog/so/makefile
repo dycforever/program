@@ -1,7 +1,7 @@
 all:main
 
 main:main.cpp libsubfunc1.so libsubfunc2.so libfunc.so libdeleter.so libmsg.so
-	g++ main.cpp -o $@ -L. -lsubfunc1 -lsubfunc2 -lfunc -ldl -lmsg -ldeleter
+	g++ main.cpp -o $@ -L. -lsubfunc1 -lsubfunc2 -lfunc -ldl -lmsg
 
 func.o:func.cpp
 	g++ -c $< -fPIC -o $@

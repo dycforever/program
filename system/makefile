@@ -10,7 +10,7 @@ CXXFLAGS=-O1 \
 		 -Werror \
 		 -fPIC
 
-export LDFLAGS=-lcommon -lpthread -lnetfilter_queue
+export LDFLAGS=-lcommon -lpthread -lnetfilter_queue -lnfnetlink
 export LIBRARY_PATH=../common
 
 srcFiles=eventfd.c ptrace.c tty.c mmap.c libnfqueue.c

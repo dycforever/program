@@ -1,5 +1,5 @@
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef DYC_COMMON_H
+#define DYC_COMMON_H
 
 // C header
 #include <math.h>
@@ -33,6 +33,8 @@
 //#include "poison.h"
 
 namespace dyc {
+extern char commonErrorMsgBuffer[];
+void COMMON_ERROR_MSG(const char* msg, ...);
 
 typedef struct {
     void* address;
@@ -48,7 +50,6 @@ void dumpUnfreed();
 void addTrack(void* addr, unsigned long asize, const char *fname, long lnum);
 bool RemoveTrack(void* addr);
 
-
 #define DELETE(pointer) \
     do { \
         if ((pointer) != NULL) { \
@@ -62,15 +63,6 @@ bool RemoveTrack(void* addr);
         if ((pointer) != NULL) { \
             operator delete[] (((void*)pointer), 0); \
             (pointer) = NULL; \
-        } \
-    } while (0)
-
-// File operation define
-#define FCLOSE(file_stream) \
-    do { \
-        if ((file_stream) != NULL) { \
-            fclose((file_stream)); \
-            (file_stream) = NULL; \
         } \
     } while (0)
 
@@ -164,7 +156,7 @@ void print_container(std::string prefix, const CON& container) {
     std::cout << std::endl;
 }
 
-#endif // __COMMON_H__
+#endif // DYC_COMMON_H
 
 
 // vim: set ts=4 sw=4 sts=4 tw=100

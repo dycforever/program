@@ -2,6 +2,7 @@
 #define HEADER
 
 #include <map>
+#include <unistd.h>
 #include <string>
 #include <iostream>
 
