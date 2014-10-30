@@ -50,22 +50,6 @@ void dumpUnfreed();
 void addTrack(void* addr, unsigned long asize, const char *fname, long lnum);
 bool RemoveTrack(void* addr);
 
-#define DELETE(pointer) \
-    do { \
-        if ((pointer) != NULL) { \
-            operator delete (((void*)pointer), 0); \
-            (pointer) = NULL; \
-        } \
-    } while (0)
-
-#define DELETES(pointer) \
-    do { \
-        if ((pointer) != NULL) { \
-            operator delete[] (((void*)pointer), 0); \
-            (pointer) = NULL; \
-        } \
-    } while (0)
-
 // Some usefull const
 
 const size_t KB = 1024LU;
@@ -110,11 +94,28 @@ struct profiler{
 
 #define PROFILER() profiler(__FUNCTION__)
 
-#define _DEBUG
+// #define _DEBUG
 
 #ifdef _DEBUG
 
 #define NEW new(__FILE__, __LINE__)
+
+#define DELETE(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            operator delete (((void*)pointer), 0); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
+
+#define DELETES(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            operator delete[] (((void*)pointer), 0); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
+
 inline void * operator new(size_t size, const char *file, int line)
 {
     void *ptr = (void *)malloc(size);
@@ -145,6 +146,22 @@ inline void operator delete[](void *p, int)
 #else  // if not define _DEBUG
 
 #define NEW new(std::nothrow)
+
+#define DELETE(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            delete (pointer); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
+
+#define DELETES(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            delete[] (pointer); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
 
 #endif // _DEBUG
 
