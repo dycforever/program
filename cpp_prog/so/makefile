@@ -24,7 +24,7 @@ libsubfunc1.so:subfunc1.o
 libsubfunc2.so:subfunc2.o
 	g++ $< -shared -o $@ 
 
-libfunc.so:func.o
+libfunc.so:func.o libsubfunc2.so
 	g++ $< libsubfunc2.so -shared -o $@ 
 
 libdeleter.so:deleter.o
