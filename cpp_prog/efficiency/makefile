@@ -13,5 +13,5 @@ stdmap_prof: map_prof.cpp
 
 .PHONY:clean
 clean:
-	rm cache_line
+	rm -rf cache_line hashmap_prof stdmap_prof
 
