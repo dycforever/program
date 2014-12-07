@@ -9,7 +9,6 @@
 
 #include "Socket.h"
 #include "InetAddress.h"
-#include "utils/util.h"
 
 using namespace dyc;
 
