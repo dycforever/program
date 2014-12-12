@@ -9,5 +9,4 @@ void func2()
     PrintGlobal("in func2");
 }
 
-
-// Global global2;
+Global global2;
