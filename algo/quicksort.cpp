@@ -1,4 +1,5 @@
 #include "common.h"
+#include "rawlog.h"
 #include <iterator> 
 
 using namespace std;
@@ -21,14 +22,14 @@ void print(vector<T> array) {
 template<typename T>
 int check(vector<T> array) {
     int len = array.size();
-//    NOTICE("begin check array: %p , len: %d", array, len);
+//    NOTICE_LOG("begin check array: %p , len: %d", array, len);
     for(int i=0; i<len-1; ++i){
         if ( array[i] > array[i+1] ) {
-            FATAL("found erroe array[%d] > array[%d]", i, i+1);
+            FATAL_LOG("found erroe array[%d] > array[%d]", i, i+1);
             return -1;
         }
     }
-    NOTICE("array is correct in increase");
+    NOTICE_LOG("array is correct in increase");
     return 0;
 }
 
@@ -123,12 +124,12 @@ int main(){
     }
     vector<int> numbers;
     convert(vec, numbers);
-    NOTICE("before sort:");
+    NOTICE_LOG("before sort:");
     print(numbers);
 
     quicksort(numbers.data(), numbers.size());
     heapsort(numbers.data(), numbers.size());
-    NOTICE("after sort:");
+    NOTICE_LOG("after sort:");
     print(numbers);
     check<int>(numbers);
 

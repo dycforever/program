@@ -10,7 +10,7 @@ CXXFLAGS=-O1 \
 		 -Werror \
 		 -fPIC
 
-export LDFLAGS=-lcommon -lpthread 
+export LDFLAGS=-lcommon -lpthread -lrawlog
 export LIBRARY_PATH=../common
 
 srcFiles=shuffle_array.cpp BinarySearchST.cpp quicksort.cpp stringSearch.cpp eightQueue.cpp 3sum.cpp generateNumber.cpp
@@ -26,7 +26,7 @@ objfiles=$(subst $(source_suffix),$(obj_suffix),$(srcFiles))
 
 all:$(binfiles)
 $(binfiles):%:%.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) $< -o $@ $(LDFLAGS)
+	g++ -g $(INCPATH) -L$(LIBRARY_PATH) $< -o $@ $(LDFLAGS)
 
 clean:
 	for file in $(binfiles) ; do \

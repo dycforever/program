@@ -1,7 +1,7 @@
-#include "log.h"
+#include "rawlog.h"
 namespace dyc {
 
-#ifndef STDOUT_LOG
+#ifdef USE_LOG4C
 log4c_category_t* gDYCLogObj;
 #endif
 

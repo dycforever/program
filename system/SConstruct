@@ -1,20 +1,24 @@
 #!/usr/bin/python
 
+import os
+import getpass
+
+homedir = os.path.expanduser("~")
+
 cflags="-g -std=c++0x"
-include_dir = [ '/home/dyc/github/program/netlib/net_client',
-                '/home/dyc/github/program/netlib/net_client/utils',
-                '/home/dyc/github/program/netlib/net_client/tools',
-                '/home/dyc/tools/zlib/include', 
-                '/home/dyc/tools/log4c/include', 
-                '/home/dyc/github/program/common', 
-                '/home/dyc/github/program/common/thread', 
-                '/home/dyc/github/program/common/utils']
+include_dir = [ homedir + '/github/netlib/',
+                homedir + '/github/netlib/utils',
+                homedir + '/github/netlib/tools',
+                homedir + '/tools/zlib/include', 
+                homedir + '/tools/log4c/include', 
+                homedir + '/github/program/common', 
+                homedir + '/github/program/common/thread']
 
 lib_dir = ['.', 
-            "/home/dyc/github/program/common", 
-            "/home/dyc/github/program/netlib/net_client", 
-            "/home/dyc/tools/zlib/lib", 
-            "/home/dyc/tools/log4c/lib"
+            homedir + "/github/program/common", 
+            homedir + "/github//netlib/", 
+            homedir + "/tools/zlib/lib", 
+            homedir + "/tools/log4c/lib"
             ]
 
 env = Environment(CPPPATH = include_dir, CCFLAGS = cflags, tools=['default', 'packaging'])

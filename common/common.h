@@ -1,5 +1,5 @@
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef DYC_COMMON_H
+#define DYC_COMMON_H
 
 // C header
 #include <math.h>
@@ -30,11 +30,11 @@
 
 // linux kernel header
 #include <sys/syscall.h>
-
-#include "log.h"
 //#include "poison.h"
 
 namespace dyc {
+extern char commonErrorMsgBuffer[];
+void COMMON_ERROR_MSG(const char* msg, ...);
 
 typedef struct {
     void* address;
@@ -49,32 +49,6 @@ extern AllocMap* dycMemAllocMap;
 void dumpUnfreed();
 void addTrack(void* addr, unsigned long asize, const char *fname, long lnum);
 bool RemoveTrack(void* addr);
-
-
-#define DELETE(pointer) \
-    do { \
-        if ((pointer) != NULL) { \
-            operator delete (((void*)pointer), 0); \
-            (pointer) = NULL; \
-        } \
-    } while (0)
-
-#define DELETES(pointer) \
-    do { \
-        if ((pointer) != NULL) { \
-            operator delete[] (((void*)pointer), 0); \
-            (pointer) = NULL; \
-        } \
-    } while (0)
-
-// File operation define
-#define FCLOSE(file_stream) \
-    do { \
-        if ((file_stream) != NULL) { \
-            fclose((file_stream)); \
-            (file_stream) = NULL; \
-        } \
-    } while (0)
 
 // Some usefull const
 
@@ -103,75 +77,45 @@ const pthread_t NULL_THREAD_HANDLE = (pthread_t)0;
 #pragma GCC diagnostic error "-Wold-style-cast"
 #endif
 
-// Some usefull file operation
-inline int create_file_folder(const std::string &file_path) {
-    if (access(file_path.c_str(), F_OK) != 0) {
-        if (mkdir(file_path.c_str(), 0777) != 0) {
-            FATAL("Create file folder[%s] error!", file_path.c_str());
-            return -1;
-        }
-    }
-    return 0;
-}
-
-inline int getFileSize(const char *fileName, uint64_t &fileSize) {
-    if (NULL == fileName) {
-        FATAL("Input arguments error: file_name[address: %p] is NULL!", fileName);
-        return -1;
-    }
-    struct stat fileInformation;
-    if (stat(fileName, &fileInformation) < 0) {
-        FATAL("Get file[%s] information failed!", fileName);
-        return -1;
-    }
-    fileSize = (uint64_t)fileInformation.st_size;
-    return 0;
-}
-
-// A simple timer counter
-class Timer {
-
-private:
-
-    struct timeval m_begin;
-    struct timeval m_end;
-
-public:
-
-    Timer() {
-        begin();
-    }
-
-    ~Timer() {
-    }
-
-    inline static uint64_t time() {
-        struct timeval now_time = {0, 0};
-        gettimeofday(&now_time, NULL);
-        return (uint64_t)(now_time.tv_sec * 1000000 + now_time.tv_usec);
-    }
-
-    inline void begin() {
-        gettimeofday(&m_begin, NULL);
-    }
-
-    inline uint64_t ms_spend() {
-        gettimeofday(&m_end, NULL);
-        return (uint64_t) ((m_end.tv_sec * 1000000 + m_end.tv_usec) - (m_begin.tv_sec * 1000000 + m_begin.tv_usec));
-    }
-
-    inline double second_spend() {
-        return static_cast<double>(ms_spend() / 1000000.0);
-    }
-};
-
 }; // namespace dyc 
 
-#define _DEBUG
+struct profiler{
+    profiler(const char* func_name){
+        gettimeofday(&tv, NULL);
+    }
+    ~profiler(){
+        struct timeval tv2;
+        gettimeofday(&tv2, NULL);
+        long cost = (tv.tv_sec - tv.tv_sec) * 1000000 + (tv.tv_usec - tv.tv_usec);
+        //! post to some manager
+    }
+    struct timeval tv;
+};
+
+#define PROFILER() profiler(__FUNCTION__)
+
+// #define _DEBUG
 
 #ifdef _DEBUG
 
 #define NEW new(__FILE__, __LINE__)
+
+#define DELETE(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            operator delete (((void*)pointer), 0); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
+
+#define DELETES(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            operator delete[] (((void*)pointer), 0); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
+
 inline void * operator new(size_t size, const char *file, int line)
 {
     void *ptr = (void *)malloc(size);
@@ -203,6 +147,22 @@ inline void operator delete[](void *p, int)
 
 #define NEW new(std::nothrow)
 
+#define DELETE(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            delete (pointer); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
+
+#define DELETES(pointer) \
+    do { \
+        if ((pointer) != NULL) { \
+            delete[] (pointer); \
+            (pointer) = NULL; \
+        } \
+    } while (0)
+
 #endif // _DEBUG
 
 
@@ -213,7 +173,7 @@ void print_container(std::string prefix, const CON& container) {
     std::cout << std::endl;
 }
 
-#endif // __COMMON_H__
+#endif // DYC_COMMON_H
 
 
 // vim: set ts=4 sw=4 sts=4 tw=100

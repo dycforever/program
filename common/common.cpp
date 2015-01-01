@@ -1,5 +1,23 @@
+#include <stdarg.h>
 #include "common.h"
 namespace dyc {
+
+#define COMMON_ERROR_MSG_BUFFER_LENGTH 1024
+#define COMMON_ERROR_MSG_BUFFER_ALLOC_LENGTH (COMMON_ERROR_MSG_BUFFER_LENGTH+1)
+
+char commonErrorMsgBuffer[COMMON_ERROR_MSG_BUFFER_ALLOC_LENGTH];
+void COMMON_ERROR_MSG(const char*fmt, ...) 
+{
+    va_list argptr;
+    va_start(argptr, fmt);
+    vsnprintf(commonErrorMsgBuffer, COMMON_ERROR_MSG_BUFFER_LENGTH, fmt, argptr);
+    va_end(argptr);
+}
+
+char* getErrorMsg() 
+{
+    return commonErrorMsgBuffer;
+}
 
 AllocMap* dycMemAllocMap;
 

@@ -1,8 +1,7 @@
 #ifndef DLL_WRAPPER_H
 #define DLL_WRAPPER_H
 
-#include <common.h>
-#include <log.h>
+#include "common.h"
 
 namespace dyc {
 
@@ -17,10 +16,13 @@ public:
     bool DllClose();
     void* DllSymbol(const std::string &symbolName);
 
+    static char* errstr();
+
 private:
     std::string mDllPath;
     void *mHandler;
 
+    static char errorMsg[1024];
 };
 
 }

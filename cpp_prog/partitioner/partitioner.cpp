@@ -3,6 +3,8 @@
 #include <sstream>
 #include <sys/sendfile.h>
 
+#include "rawlog.h"
+
 #include "cmd_args.h"
 
 using namespace std;
@@ -22,7 +24,7 @@ int checkPos (FILE* fp, off_t pos, char c) {
 
 
 void findchar(FILE* fp, off_t start, vector<off_t>& delimiters) {
-    DEBUG("in find char");
+    DEBUG_LOG("in find char");
     assert(fseek(fp, start, SEEK_SET) == 0);
     char buf[BUFFER_SIZE];
     bool found = false;
@@ -31,17 +33,17 @@ void findchar(FILE* fp, off_t start, vector<off_t>& delimiters) {
         size_t readCount = fread(buf, 1, sizeof(buf), fp);
         if (readCount != sizeof(buf)) {
             if (feof(fp)) {
-                DEBUG("PUSH file over %ld", start + hasRead + readCount);
+                DEBUG_LOG("PUSH file over %ld", start + hasRead + readCount);
                 delimiters.push_back(start + hasRead + readCount);
             } else {
-                FATAL("read failed:");
+                FATAL_LOG("read failed:");
                 delimiters.push_back(-1);
             }
             break;
         }
         for (int i=0; i<sizeof(buf); ++i) {
             if (buf[i] == '\n') {
-                DEBUG("PUSH CR %ld", start + hasRead + readCount);
+                DEBUG_LOG("PUSH CR %ld", start + hasRead + readCount);
                 delimiters.push_back(start + hasRead + i);
                 checkPos(fp, start + hasRead + i, '\n');
                 found = true;
@@ -77,15 +79,15 @@ int main(int argc, char** argv) {
     }
 
     // confirm
-    NOTICE("size: %ld", delimiters.size());
+    NOTICE_LOG("size: %ld", delimiters.size());
     assert(fseek(fp, 0, SEEK_SET) == 0);
     for (int i=0; i<delimiters.size(); i++) {
 //        std::cout << delimiters[i] << std::endl;
         if (delimiters[i] == -1) {
-            FATAL("something wrong");
+            FATAL_LOG("something wrong");
         } else if(delimiters[i] != fileSize) {
             checkPos(fp, delimiters[i], '\n');
-            NOTICE("check pass");
+            NOTICE_LOG("check pass");
         }
     }
     fclose(fp);

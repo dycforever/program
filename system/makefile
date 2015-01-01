@@ -10,10 +10,10 @@ CXXFLAGS=-O1 \
 		 -Werror \
 		 -fPIC
 
-export LDFLAGS=-lcommon -lpthread 
+export LDFLAGS=-lcommon -lpthread -lnetfilter_queue -lnfnetlink
 export LIBRARY_PATH=../common
 
-srcFiles=eventfd.c ptrace.c tty.c 
+srcFiles=eventfd.c ptrace.c tty.c mmap.c libnfqueue.c mem_press.c
 
 empty=
 source_suffix=.c
@@ -32,5 +32,4 @@ clean:
 	for file in $(binfiles) ; do \
 		rm -rf $$file $$file.o ;\
 	done
-
 

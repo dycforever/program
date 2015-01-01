@@ -1,5 +1,5 @@
-#include <DllWrapper.h>
 #include <dlfcn.h>
+#include "utils/DllWrapper.h"
 
 namespace dyc {
 
@@ -17,7 +17,8 @@ bool DllWrapper::DllOpen()
 {
     mHandler = ::dlopen(mDllPath.c_str(), RTLD_NOW);
     if (mHandler == NULL) {
-        FATAL("dllopen failed: %s", ::dlerror());
+        // FATAL_LOG("dllopen failed: %s", ::dlerror());
+        snprintf(errorMsg, 1024, "dllopen failed: %s", ::dlerror());
         return false;
     }
     return true;
@@ -28,7 +29,8 @@ bool DllWrapper::DllClose()
     if (mHandler != NULL) {
         int ret = ::dlclose(mHandler);
         if (ret != 0) {
-            FATAL("dllclose failed: %s", ::dlerror());
+            // FATAL_LOG("dllclose failed: %s", ::dlerror());
+            snprintf(errorMsg, 1024, "dllclose failed: %s", ::dlerror());
             return false;
         }
         mHandler = NULL;
@@ -43,7 +45,8 @@ void* DllWrapper::DllSymbol(const std::string& symbolName)
     }
     void* symbol = ::dlsym(mHandler, symbolName.c_str());
     if (symbol == NULL) {
-        FATAL("dllsymbol failed: %s", ::dlerror());
+        // FATAL_LOG("dllsymbol failed: %s", ::dlerror());
+        snprintf(errorMsg, 1024, "dllsymbol failed: %s", ::dlerror());
     }
     return symbol;
 }

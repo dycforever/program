@@ -50,7 +50,7 @@ public:
 		cout << "A constructor" << endl;
 	}
 
-	~A(){
+	virtual ~A(){
         log();
 		cout << "A destructor" << endl;
 	}

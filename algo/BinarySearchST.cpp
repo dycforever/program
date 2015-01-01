@@ -1,4 +1,5 @@
 #include <common.h>
+#include <rawlog.h>
 #include <stack>
 //#include <BinarySearchST.h>
 using namespace std;
@@ -85,7 +86,7 @@ int BinarySearchST<K, V>::put(K key, V value){
 //        DEBUG("insert success");
         return 0;
     }
-    WARNING("insert failed");
+    WARN_LOG("insert failed");
     return -1;
 }
 
@@ -118,7 +119,7 @@ int BinarySearchST<K,V>::get(K key, V& value){
         value = node->m_value;
         return 0;
     }else{
-        WARNING("not found");
+        WARN_LOG("not found");
         return -1;
     }
 }
@@ -292,7 +293,7 @@ int BinarySearchST<K,V>::check_binary(){
     if(ret == -1)
         return -1;
     if( size(m_root) != m_root->m_size){
-        FATAL("inconsistent node size ");
+        FATAL_LOG("inconsistent node size ");
         return -1;
     }
     return 0;
@@ -303,7 +304,7 @@ int BinarySearchST<K,V>::get_height(Node* node, int now_layer, int max){
     if(NULL == node)
         return 0;
     if(now_layer > max){
-        FATAL("too many layer:%d  max:%d", now_layer, max);
+        FATAL_LOG("too many layer:%d  max:%d", now_layer, max);
         return -1;
     }
     int left_h = get_height(node->left, now_layer+1, max);
@@ -320,7 +321,7 @@ int BinarySearchST<K,V>::check_rank(){
         return 0;
     for(int i=0;i<m_root->m_size;++i){
         if( rank(select(i)) != i){
-            FATAL("check rank failed i:%d",i);
+            FATAL_LOG("check rank failed i:%d",i);
             return -1;
         }
 //        DEBUG("check rank select success");
@@ -338,25 +339,25 @@ int BinarySearchST<K,V>::check_order_and_equal(typename BinarySearchST<K,V>::Nod
     if(node == NULL)
         return 0;
     if( node->left && node->left->m_key >= node->m_key ){
-        FATAL("invalid order at left");
+        FATAL_LOG("invalid order at left");
         cout << "left child:" << node->left->m_key <<"  self:" << node->m_key << endl;
         return -1;
     }
 
     if( node->right && node->right->m_key <= node->m_key){
-        FATAL("invalid order at right");
+        FATAL_LOG("invalid order at right");
         cout << "right child:" << node->right->m_key <<"  self:" << node->m_key << endl;
         return -1;
     }
     int ret;
     ret = check_order_and_equal(node->left);
     if( 0 != ret){
-        FATAL("invalid order in left subtree");
+        FATAL_LOG("invalid order in left subtree");
         return -1;
     }
     ret = check_order_and_equal(node->right);
     if( 0 != ret){
-        FATAL("invalid order in right subtree");
+        FATAL_LOG("invalid order in right subtree");
         return -1;
     }
     return 0;
@@ -372,19 +373,19 @@ int BinarySearchST<K,V>::check(){
     int ret;
     ret = check_binary();
     if(0 != ret){
-        FATAL("check binary failed");
+        FATAL_LOG("check binary failed");
         return -1;
     }
 
     ret = check_order_and_equal();
     if(0 != ret){
-        FATAL("check order failed");
+        FATAL_LOG("check order failed");
         return -1;
     }
 
     ret = check_rank();
     if(0 != ret){
-        FATAL("check rank failed");
+        FATAL_LOG("check rank failed");
         return -1;
     }
     return 0;
