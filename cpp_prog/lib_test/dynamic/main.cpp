@@ -1,4 +1,5 @@
 
+#include "global.h"
 #include <iostream>
 #include <dlfcn.h>
 
@@ -34,10 +35,13 @@ int main()
 extern "C" void func1();
 extern "C" void func2();
 
+extern Global global;
+
 int main() 
 {
     std::cout << "main_link start" << std::endl;
     func1();
+    std::cout << "in main_link: " << &global << std::endl;
     func2();
     std::cout << "main end" << std::endl;
 }
