@@ -8,6 +8,12 @@ Global::Global()
     std::cout << "call Global::Global()" << std::endl;
 }
 
+
+Global::~Global() 
+{
+    std::cout << "call Global::~Global()" << std::endl;
+}
+
 Global global;
 
 void PrintGlobal(const char* mesg)
