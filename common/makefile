@@ -2,7 +2,7 @@ all:lib rawloglib
 
 VPATH=thread utils
 
-INCLUDE_PATH=/home/dyc/tools/log4c/include:/home/dyc/github/program/common
+INCLUDE_PATH=/home/dingyc/tools/log4c/include:/home/dingyc/github/program/common
 export CPLUS_INCLUDE_PATH=$(INCLUDE_PATH)
 
 

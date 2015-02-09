@@ -1,0 +1,9 @@
+all_dynamic:
+    一个so只被load一次，所以一份数据，一次init()
+
+dynamic:
+    全局变量在所有so中，所以数据一份，init()两次
+    -fPIC会使用GOT，否在global会copy到exe中，并覆盖so中的变量；变量驱重去作用于GOT中存在的符号
+
+dynamic_lazy:
+    dlopen时指定lazy会延迟符号的binding，但是数据符号不能lazy

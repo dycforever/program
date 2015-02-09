@@ -2,6 +2,7 @@
 #include "global.h"
 #include <iostream>
 #include <dlfcn.h>
+#include "global.h"
 
 #ifdef DLOPEN
 
@@ -32,6 +33,25 @@ int main()
 
 #else
 
+#ifdef PRINT_VAR
+
+extern "C" void func1();
+extern "C" void func2();
+
+extern Global global;
+
+int main() 
+{
+    std::cout << "main_link start" << std::endl;
+    func1();
+    std::cout << "in main: " << &global << std::endl;
+    func2();
+    getchar();
+    std::cout << "main end" << std::endl;
+}
+
+#else
+
 extern "C" void func1();
 extern "C" void func2();
 
@@ -46,5 +66,6 @@ int main()
     std::cout << "main end" << std::endl;
 }
 
+#endif
 #endif
 

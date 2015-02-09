@@ -16,9 +16,16 @@ void global_deinit()
     std::cout << "call global_deinit()" << std::endl;
 }
 
-Global::Global() 
+Global::Global()
+    : member(0)
 {
-    std::cout << "call Global::Global()" << std::endl;
+    member++;
+    std::cout << "call Global::Global() " << member << std::endl;
+}
+
+Global::~Global() 
+{
+    std::cout << "call Global::~Global()" << std::endl;
 }
 
 Global global;
