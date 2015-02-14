@@ -6,7 +6,7 @@ INCLUDE_PATH=/home/dyc/tools/log4c/include:/home/dyc/github/program/common
 export CPLUS_INCLUDE_PATH=$(INCLUDE_PATH)
 
 
-objects=common.o ThreadPool.o FileUtil.o DllWrapper.o LoopThread.o StringTokenizer.o StringUtil.o SignalEventLoop.o
+objects=common.o ThreadPool.o FileUtil.o DllWrapper.o LoopThread.o StringTokenizer.o StringUtil.o
 lib:$(objects)
 	ar -q libcommon.a $(objects)
 
