@@ -1,0 +1,5 @@
+
+#see which file using cache
+probe vfs.add_to_page_cache {printf("dev=%d, devname=%s, ino=%d, index=%d, nrpages=%d\n", dev, devname, ino, index, nrpages )}
+
+
