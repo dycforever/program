@@ -283,6 +283,7 @@ case(SYS_wait4): return "SYS_wait4";
 case(SYS_waitid): return "SYS_waitid";
 case(SYS_write): return "SYS_write";
 case(SYS_writev): return "SYS_writev";
+default: return "unknow";
 }
 
 #else
@@ -600,6 +601,7 @@ case(SYS_wait4): return "SYS_wait4";
 case(SYS_waitid): return "SYS_waitid";
 case(SYS_write): return "SYS_write";
 case(SYS_writev): return "SYS_writev";
+default: return "unknow";
 }
 
 #endif

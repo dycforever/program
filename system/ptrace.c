@@ -99,7 +99,7 @@ int main() {
     return 0;
 }
 
-//#define syscall2str(sysnum) #sysnum
+// #define syscall2str(sysnum) #sysnum
 
 #ifdef __x86_64__
 void parent(int child) {
