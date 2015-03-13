@@ -1,0 +1,4 @@
+probe kernel.function("*@mm/page_alloc.c") { 
+    if (pid() == target())
+        printf ("%ld   %s(%d) %s\n", target(), execname(), pid(), probefunc())
+}
