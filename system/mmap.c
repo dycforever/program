@@ -6,14 +6,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define NUM 500 * 1024 * 1024
+
 void data_gen()
 {
     const char* filename = "data";
     size_t i;
+    size_t* data = malloc(NUM * sizeof(i));
     FILE* fp = fopen(filename, "w");
-    for (i = 0; i < 100 * 1024 * 1024; i++) {
-        fwrite(&i, sizeof(i), 1, fp);
+    for (i = 0; i < NUM; i++) {
+        data[i] = i;
     }
+    fwrite(data, sizeof(i), NUM, fp);
+    printf("write done\n");
+    getchar();
+    free(data);
     fclose(fp);
 }
 
@@ -27,6 +34,9 @@ int main(int argc, char *argv[])
     struct stat sb;
     off_t offset, pa_offset;
     size_t length, i;
+
+    data_gen();
+    printf("data_gen() done\n");
 
     fd = open("data", O_RDONLY);
     if (fd == -1)
@@ -46,17 +56,17 @@ int main(int argc, char *argv[])
    /* No length arg ==> display to end of file */
         length = sb.st_size - offset;
 
-    addr = (size_t*)mmap(NULL, length + offset - pa_offset, PROT_READ,
+    addr = (size_t*)mmap(NULL, length + offset - pa_offset, PROT_READ|PROT_WRITE,
             MAP_PRIVATE, fd, pa_offset);
     if (addr == MAP_FAILED)
         handle_error("mmap");
 
-    while(1)
-    for (i = 0; i < 100 * 1024 * 1024; i++) {
+    for (i = 0; i < NUM; i++) {
         if (addr[i] != i) {
             handle_error("read");
         }
     }
     printf("all over\n");
+    getchar();
     exit(EXIT_SUCCESS);
 }
