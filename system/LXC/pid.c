@@ -39,10 +39,10 @@ int child_main(void* arg)
 
 int main()
 {
-    // init sync primitive
     pipe(checkpoint);
     printf(" - [%5d] Hello ?\n", getpid());
 
+    // The low byte of flags contains the number of the termination signal sent to the parent when the child dies.
     int child_pid = clone(child_main, child_stack+STACK_SIZE,
             CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWPID | SIGCHLD, NULL);
 
