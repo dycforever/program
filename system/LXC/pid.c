@@ -43,13 +43,17 @@ int main()
     printf(" - [%5d] Hello ?\n", getpid());
 
     // The low byte of flags contains the number of the termination signal sent to the parent when the child dies.
+    // By CLONE_NEWIPC, child's ipcs won't see parent's ipc objects
     int child_pid = clone(child_main, child_stack+STACK_SIZE,
             CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWPID | SIGCHLD, NULL);
+    if (child_pid == -1) {
+        perror("clone failed:");
+        return -1;
+    }
 
-    //   further init here (nothing yet)
     // signal "done"
     close(checkpoint[1]);
-
     waitpid(child_pid, NULL, 0);
+    printf("container exit\n");
     return 0;
 }
