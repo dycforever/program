@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
     off_t offset, pa_offset;
     size_t length, i;
 
+    data_gen();
     fd = open("data", O_RDONLY);
     if (fd == -1)
         handle_error("open");
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
     }
    /* No length arg ==> display to end of file */
         length = sb.st_size - offset;
-
+    printf("will mmap\n");getchar();
     addr = (size_t*)mmap(NULL, length + offset - pa_offset, PROT_READ,
             MAP_PRIVATE, fd, pa_offset);
     if (addr == MAP_FAILED)
