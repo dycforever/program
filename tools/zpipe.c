@@ -41,10 +41,9 @@ int def(FILE *source, FILE *dest, int level)
         strm.next_in = in;
         if (firstBlock) {
             firstBlock = 0;
-            if (strm.avail_in > 3 && in[0] == 0x00 && in[1] == 0x01 && in[2] == 0x02) {
+            if (strm.avail_in > 2 && in[0] == 0x00 && in[1] == 0x01) {
                 in[0] = 0x1f;
                 in[1] = 0x8b;
-                in[2] = 0x08;
             }
         }  
 
@@ -113,10 +112,9 @@ int inf(FILE *source, FILE *dest)
 
         if (firstBlock) {
             firstBlock = 0;
-            if (strm.avail_in > 3 && in[0] == 0x00 && in[1] == 0x01 && in[2] == 0x02) {
+            if (strm.avail_in >= 2 && in[0] == 0x00 && in[1] == 0x01) {
                 in[0] = 0x1f;
                 in[1] = 0x8b;
-                in[2] = 0x08;
                 fprintf(stderr, "dealing gz2 data\n");
             }
         }

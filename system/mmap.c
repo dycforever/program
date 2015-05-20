@@ -6,14 +6,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define NUM 500 * 1024 * 1024
+
 void data_gen()
 {
     const char* filename = "data";
     size_t i;
+    size_t* data = malloc(NUM * sizeof(i));
     FILE* fp = fopen(filename, "w");
-    for (i = 0; i < 100 * 1024 * 1024; i++) {
-        fwrite(&i, sizeof(i), 1, fp);
+    for (i = 0; i < NUM; i++) {
+        data[i] = i;
     }
+    fwrite(data, sizeof(i), NUM, fp);
+    printf("write done\n");
+    getchar();
+    free(data);
     fclose(fp);
 }
 
@@ -29,6 +36,11 @@ int main(int argc, char *argv[])
     size_t length, i;
 
     data_gen();
+<<<<<<< HEAD
+=======
+    printf("data_gen() done\n");
+
+>>>>>>> 75d89d6130f69a9c11af78f033bb414d84d2bc4f
     fd = open("data", O_RDONLY);
     if (fd == -1)
         handle_error("open");
@@ -46,18 +58,23 @@ int main(int argc, char *argv[])
     }
    /* No length arg ==> display to end of file */
         length = sb.st_size - offset;
+<<<<<<< HEAD
     printf("will mmap\n");getchar();
     addr = (size_t*)mmap(NULL, length + offset - pa_offset, PROT_READ,
+=======
+
+    addr = (size_t*)mmap(NULL, length + offset - pa_offset, PROT_READ|PROT_WRITE,
+>>>>>>> 75d89d6130f69a9c11af78f033bb414d84d2bc4f
             MAP_PRIVATE, fd, pa_offset);
     if (addr == MAP_FAILED)
         handle_error("mmap");
 
-    while(1)
-    for (i = 0; i < 100 * 1024 * 1024; i++) {
+    for (i = 0; i < NUM; i++) {
         if (addr[i] != i) {
             handle_error("read");
         }
     }
     printf("all over\n");
+    getchar();
     exit(EXIT_SUCCESS);
 }
