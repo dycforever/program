@@ -1,0 +1,5 @@
+#probe kernel.function("*@mm/page_alloc.c") { 
+probe kernel.function("balance_pgdat") { 
+    if (pid() == target())
+        printf ("%d   %s(%d) %s\n", target(), execname(), pid(), probefunc())
+}

@@ -30,6 +30,10 @@ int main()
 
     func1(true);
     func1(false);
+    if (dlclose(dlHandle) != 0) {
+        std::cerr << "dlclose failed:" << std::endl;
+        return -1;
+    }
     std::cout << "main end" << std::endl;
 }
 

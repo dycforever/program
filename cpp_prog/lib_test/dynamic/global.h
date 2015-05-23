@@ -1,4 +1,5 @@
-
+#ifndef GLOBAL_H
+#define GLOBAL_H
 class Global
 {
 public:
@@ -7,4 +8,4 @@ public:
 
     int member;
 };
-
+#endif

@@ -1,0 +1,66 @@
+
+#probe kernel.function("vfs_read") {
+#    printf ("current files_stat max_files: %d\n", @var("files_stat@fs/file_table.c")->max_files);
+#    exit(); 
+#}
+
+
+#probe begin {
+#    %( CONFIG_PREEMPT == "" %? printf ("not CONFIG_PREEMPT\n")  %: printf ("CONFIG_PREEMPT\n")  %)
+#    exit(); 
+#}
+
+#probe kernel.function("tcp_select_initial_window") {
+#    if (pid() == target()) {
+#        printf ("[%d] param: %s \n", pid(), $$parms);
+#    }
+#}
+
+probe begin {
+    printf("probe begin")
+}
+
+function print_u8:long(p:long)
+%{
+    unsigned char* addr = (unsigned char*)(THIS->p);
+    THIS->__retvalue = *addr;
+%}
+
+function set_u32(p:long)
+%{
+    unsigned int* addr = (unsigned int*)(THIS->p);
+    *addr = 12348;
+%}
+
+function print_u32:long(p:long)
+%{
+    unsigned int* addr = (unsigned int*)(THIS->p);
+    THIS->__retvalue = *addr;
+%}
+
+probe kernel.function("tcp_select_initial_window")
+{
+    if (pid() == target()) {
+        printf("[%d] [%s] window_clamp[%d] rcv_wnd[%d] rcv_wscale[%d]\n", 
+            pid(), probefunc(), print_u32($window_clamp), print_u32($rcv_wnd), print_u8($rcv_wscale));
+        printf("__space[%d] mss[%d] wscale_ok[%d]\n", $__space, $mss, $wscale_ok);
+    }
+}
+
+
+probe kernel.function("tcp_select_initial_window").return
+{
+    if (pid() == target()) {
+        printf("rcv_wnd[%d] rcv_wscale[%d]\n", print_u32($rcv_wnd), print_u8($rcv_wscale));
+        set_u32($rcv_wnd);
+    }
+}
+
+
+#probe kernel.function("__tcp_select_window").return
+#{
+#    if (pid() == target()) {
+#        printf("%d\n", $return);
+#    }
+#}
+

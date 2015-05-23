@@ -56,6 +56,10 @@ int main()
     int child_pid = clone(child_main, child_stack+STACK_SIZE,
             CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | SIGCHLD, NULL);
 
+    if (child_pid == -1) {
+        perror("clone failed:");
+        return -1;
+    }
     // further init: create a veth pair
     char* cmd;
     asprintf(&cmd, "ip link set veth1 netns %d", child_pid);

@@ -22,3 +22,4 @@ main: main.cpp lib1 lib2
 
 clean:
 	rm -rf *.o *.a a.out
+

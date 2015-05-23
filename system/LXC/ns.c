@@ -47,14 +47,17 @@ int main()
 
     printf(" - [%5d] Hello ?\n", getpid());
 
+    // By CLONE_NEWNS, child's ps will see much less processes
     int child_pid = clone(child_main, child_stack+STACK_SIZE,
             CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWPID | CLONE_NEWNS | SIGCHLD, NULL);
-
-    // further init here (nothing yet)
-
+    if (child_pid == -1) {
+        perror("clone failed:");
+        return -1;
+    }
     // signal "done"
     close(checkpoint[1]);
 
     waitpid(child_pid, NULL, 0);
+    printf("container exit\n");
     return 0;
 }

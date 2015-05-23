@@ -2,7 +2,6 @@
 #include "global.h"
 #include <iostream>
 #include <dlfcn.h>
-#include "global.h"
 
 #ifdef DLOPEN
 
@@ -28,6 +27,10 @@ int main()
 
     func1();
     func2();
+    if (dlclose(dlHandle1) != 0 || dlclose(dlHandle2) != 0) {
+        std::cerr << "dlclose failed:" << std::endl;
+        return -1;
+    }
     std::cout << "main end" << std::endl;
 }
 
@@ -38,13 +41,13 @@ int main()
 extern "C" void func1();
 extern "C" void func2();
 
-extern Global global;
+//extern Global global;
 
 int main() 
 {
     std::cout << "main_link start" << std::endl;
     func1();
-    std::cout << "in main: " << &global << std::endl;
+//    std::cout << "in main: " << &global << std::endl;
     func2();
     getchar();
     std::cout << "main end" << std::endl;
@@ -55,13 +58,13 @@ int main()
 extern "C" void func1();
 extern "C" void func2();
 
-extern Global global;
+//extern Global global;
 
 int main() 
 {
     std::cout << "main_link start" << std::endl;
     func1();
-    std::cout << "in main_link: " << &global << std::endl;
+//    std::cout << "in main_link: " << &global << std::endl;
     func2();
     std::cout << "main end" << std::endl;
 }
