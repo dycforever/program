@@ -36,3 +36,4 @@ libmsg.so:msg.o
 .PHONY:clean
 clean:
 	rm -rf *.o *.so main
+

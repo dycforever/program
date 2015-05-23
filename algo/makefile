@@ -26,7 +26,7 @@ objfiles=$(subst $(source_suffix),$(obj_suffix),$(srcFiles))
 
 all:$(binfiles)
 $(binfiles):%:%.cpp
-	g++ $(INCPATH) -L$(LIBRARY_PATH) $< -o $@ $(LDFLAGS)
+	g++ -g $(INCPATH) -L$(LIBRARY_PATH) $< -o $@ $(LDFLAGS)
 
 clean:
 	for file in $(binfiles) ; do \

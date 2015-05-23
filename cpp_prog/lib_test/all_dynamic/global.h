@@ -1,0 +1,7 @@
+
+class Global
+{
+public:
+    Global();
+};
+

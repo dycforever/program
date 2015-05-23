@@ -13,7 +13,7 @@ CXXFLAGS=-O1 \
 export LDFLAGS=-lcommon -lpthread -lnetfilter_queue -lnfnetlink
 export LIBRARY_PATH=../common
 
-srcFiles=eventfd.c ptrace.c tty.c mmap.c libnfqueue.c
+srcFiles=eventfd.c ptrace.c tty.c mmap.c libnfqueue.c mem_press.c
 
 empty=
 source_suffix=.c
