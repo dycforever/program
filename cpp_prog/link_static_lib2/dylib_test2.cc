@@ -2,7 +2,11 @@
 #include <stdio.h>
 #include <vector>
 
+#ifdef HELLO2
 extern void hello2();
+#else
+extern void hello();
+#endif
 
 class Test2 {
 public:
@@ -23,7 +27,11 @@ static Test2 sTest2Obj;
 
 extern "C"
 bool saySth2() {
+#ifdef HELLO2
     hello2();
+#else
+    hello();
+#endif
     printf("static obj in lib2: %p\n", &sTest2Obj);
     return true;
 }
