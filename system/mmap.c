@@ -36,8 +36,11 @@ int main(int argc, char *argv[])
     size_t length, i;
 
     data_gen();
+<<<<<<< HEAD
+=======
     printf("data_gen() done\n");
 
+>>>>>>> 75d89d6130f69a9c11af78f033bb414d84d2bc4f
     fd = open("data", O_RDONLY);
     if (fd == -1)
         handle_error("open");
@@ -55,8 +58,13 @@ int main(int argc, char *argv[])
     }
    /* No length arg ==> display to end of file */
         length = sb.st_size - offset;
+<<<<<<< HEAD
+    printf("will mmap\n");getchar();
+    addr = (size_t*)mmap(NULL, length + offset - pa_offset, PROT_READ,
+=======
 
     addr = (size_t*)mmap(NULL, length + offset - pa_offset, PROT_READ|PROT_WRITE,
+>>>>>>> 75d89d6130f69a9c11af78f033bb414d84d2bc4f
             MAP_PRIVATE, fd, pa_offset);
     if (addr == MAP_FAILED)
         handle_error("mmap");

@@ -57,7 +57,6 @@ void call_function()
     C_A* c_a = new C_A;
     const C_A* c_a_const = c_a;
     c_a->p();
-
     const D_BC* d_bc = new D_BC;
     // error: ambiguous p()
     // d_bc->p();

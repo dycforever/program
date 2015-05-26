@@ -28,11 +28,11 @@ Global::~Global()
     std::cout << "call Global::~Global()" << std::endl;
 }
 
-static Global global;
+static Global global_hehetest;
 
 void PrintGlobal(const char* mesg)
 {
-    printf("[%s] global addr: %p\n", mesg, &global);
+    printf("[%s] global addr: %p\n", mesg, &global_hehetest);
     fflush(stdout);
 }
 
