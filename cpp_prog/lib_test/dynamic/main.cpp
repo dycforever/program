@@ -1,6 +1,7 @@
 
 #include "global.h"
 #include <iostream>
+#include <stdio.h>
 #include <dlfcn.h>
 
 #ifdef DLOPEN
