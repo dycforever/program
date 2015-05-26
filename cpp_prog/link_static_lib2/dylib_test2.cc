@@ -1,16 +1,17 @@
 #include <iostream>
+#include <stdio.h>
 #include <vector>
 
-extern void hello();
+extern void hello2();
 
 class Test2 {
 public:
     Test2() {
-        std::cout << "Test2:" << this << std::endl;
+//        std::cout << "Test2:" << this << std::endl;
     }
 
     ~Test2() {
-        std::cout << "~Test2:" << this << std::endl;
+//        std::cout << "~Test2:" << this << std::endl;
     }
 };
 
@@ -22,7 +23,7 @@ static Test2 sTest2Obj;
 
 extern "C"
 bool saySth2() {
-    hello();
-    std::cout << "sTest2Obj:" << &sTest2Obj << std::endl;
+    hello2();
+    printf("static obj in lib2: %p\n", &sTest2Obj);
     return true;
 }

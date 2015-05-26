@@ -5,11 +5,11 @@
 class Test {
 public:
     Test(const std::string& text) {
-        std::cout << "Test:" << text << ":" << this << std::endl;
+//        std::cout << "Test:" << text << ":" << this << std::endl;
     }
 
     ~Test() {
-        std::cout << "~Test:" << this << std::endl;
+//        std::cout << "~Test:" << this << std::endl;
     }
 
     void addSth(const std::string& str) {
