@@ -9,10 +9,11 @@ Global::Global()
 }
 
 Global global;
+static int static_test;
 
 void PrintGlobal(const char* mesg)
 {
-    printf("[%s] global addr: %p\n", mesg, &global);
+    printf("[%s] global addr: %p\n", mesg, &static_test);
     fflush(stdout);
 }
 

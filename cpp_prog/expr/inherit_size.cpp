@@ -7,28 +7,34 @@ public :
 	virtual void p(){cout << "a" << endl;}
 //	virtual ~A(){};
 };
+
 class B:public A{
 	int b;
 public :
 	void p(){cout << "b" << endl;}
 //	~A(){};
 };
+
 class C:public A{
 	int c;
 	void p(){cout << "c" << endl;}
 };
+
 class D:public B, public C{
 	int d;
 };
+
 class E:public D{
 	int d;
 };
+
 class test{
 public:
 	test(){};
 	test(int i){++i;};
 	void f(){};
 };
+
 int main(){
 	string s = "dycforever";
 	cout << "sizeof(A)=" << sizeof(A)
@@ -40,5 +46,8 @@ int main(){
 	t.f();
 	cout << endl <<"sizeof(s)= " << sizeof(s) << endl;
 
+    A* a = new B;
+    B* b = dynamic_cast<B*>(a);
+    cout << "b is " << b << std::endl;
 
 }
