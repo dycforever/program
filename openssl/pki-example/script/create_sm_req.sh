@@ -1,5 +1,5 @@
 
-SAN=DNS:www.simple.org \
+SAN=DNS:m.sm.cn \
     openssl req -new \
     -config etc/server.conf \
     -out certs/simple.org.csr \
