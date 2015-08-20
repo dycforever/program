@@ -1,0 +1,80 @@
+#!/bin/bash
+# rsa的key长度默认是512 bit，现在已经不够安全了，一般使用2048
+# 生成的key用 aes 的cbc模式加密，密钥长度是128
+#openssl genrsa -aes128 -out fd.key 2048
+#openssl genrsa -out fd.key 2048
+
+# 获取 private key
+#openssl rsa -text -in fd.key
+# 获取 public key，可见key里面是同时包含了公钥和私钥的
+#openssl rsa -text -pubout -in fd.key
+
+# 交互式生成csr
+# challenge password实际很少有人用，因为并不显著提高安全性，CA也很少使用这个值，不要和passphrase混淆
+#openssl req -new -key fd.key -out fd.csr
+
+# 根据文件，以非交互式的方式创建csr
+#openssl req -new -config etc/fd.cnf -key fd.key -out fd.csr
+
+# create cert:
+#openssl x509 -req -days 365 -in fd.csr -signkey fd.key -out fd.crt -extfile etc/fd.ext
+
+# create cert without csr and interactive:
+# openssl req -new -x509 -days 365 -key fd.key -out fd.crt \
+#     -subj "/C=GB/L=London/O=Feisty Duck Ltd/CN=www.feistyduck.com"""
+# 注意subjectAltName只要出现，就会覆盖CN的值，新CA颁发的证书可能已经没有CN了
+
+
+##############################
+# 使用配置文件生成root CA
+##############################
+# rm -rf root-ca
+# mkdir root-ca
+# cd root-ca
+# mkdir certs db private
+# chmod 700 private
+# touch db/index
+# openssl rand -hex 16 > db/serial
+# echo 1001 > db/crlnumber
+# cd ..
+# 
+# openssl req -new \
+#     -config etc/root-ca.conf \
+#     -out root-ca/root-ca.csr \
+#     -keyout root-ca/private/root-ca.key
+# 
+# openssl ca -selfsign \
+#     -config etc/root-ca.conf \
+#     -in root-ca/root-ca.csr \
+#     -out root-ca/root-ca.crt \
+#     -extensions ca_ext
+
+
+##############################
+# 使用配置文件生成sub CA
+##############################
+# rm -rf sub-ca
+# mkdir -p sub-ca/private
+# openssl req -new \
+#     -config etc/sub-ca.conf \
+#     -out sub-ca/sub-ca.csr \
+#     -keyout sub-ca/private/sub-ca.key
+
+openssl ca \
+    -config etc/root-ca.conf \
+    -in sub-ca/sub-ca.csr \
+    -out sub-ca/sub-ca.crt \
+    -extensions sub_ca_ext
+
+# openssl ca \
+#     -config sub-ca.conf \
+#     -in server.csr \
+#     -out server.crt \
+#     -extensions server_ext
+# 
+# openssl ca \
+#     -config sub-ca.conf \
+#     -in client.csr \
+#     -out client.crt \
+#     -extensions client_ext
+
