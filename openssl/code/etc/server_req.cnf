@@ -1,0 +1,22 @@
+[req]
+default_bits = 4096
+default_md = sha256
+utf8 = yes
+string_mask = utf8only
+encrypt_key = no
+prompt = no
+distinguished_name = server_dn
+# 有什么用？？
+req_extensions = server_ext
+
+[server_dn]
+countryName = "CN"
+organizationName = "Openssl-Code-Org"
+commonName = "Openssl-Code-Server"
+
+[server_ext]
+basicConstraints = critical,CA:false
+extendedKeyUsage = clientAuth,serverAuth
+keyUsage = critical,digitalSignature,keyEncipherment
+subjectKeyIdentifier = hash
+

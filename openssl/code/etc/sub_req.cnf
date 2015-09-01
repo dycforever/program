@@ -1,0 +1,29 @@
+
+[req]
+default_bits = 4096
+encrypt_key = no
+default_md = sha256
+utf8 = yes
+string_mask = utf8only
+prompt = no
+distinguished_name = ca_dn
+
+### 有啥用？？
+# req_extensions = req_ext
+# 
+# [req_ext]
+# basicConstraints = CA:FALSE
+# keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+# subjectAltName = @alt_names
+# 
+# [alt_names]
+# DNS.1 = *.xx.sm.cn
+# DNS.2 = *.sm.cn
+
+
+[ca_dn]
+countryName = "CN"
+organizationName = "Openssl-Code-Org"
+commonName = "Openssl-Code-Signing-CA"
+
+

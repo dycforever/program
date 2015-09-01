@@ -1,0 +1,26 @@
+
+[req]
+default_bits = 4096
+default_md = sha256
+# 选项的值不管是输入的还是配置文件中，必须是utf8字符
+utf8 = yes
+# 某些字段中，只接受utf8字符(哪些字段？)
+string_mask = utf8only
+encrypt_key = no
+prompt = no
+distinguished_name = ca_dn
+# 有啥用？
+# req_extensions = ca_ext
+
+[ca_ext]
+#表示这是个CA，可以给别人签发证书
+basicConstraints = critical,CA:true
+keyUsage = critical,keyCertSign,cRLSign
+subjectKeyIdentifier = hash
+
+[ca_dn]
+countryName = "CN"
+organizationName = "Openssl-Code-Org"
+commonName = "Openssl-Code-Root-CA"
+
+

@@ -1,0 +1,14 @@
+[req]
+default_bits = 4096
+default_md = sha256
+utf8 = yes
+string_mask = utf8only
+encrypt_key = no
+prompt = no
+distinguished_name = client_dn
+
+[client_dn]
+countryName = "CN"
+organizationName = "Openssl-Code-Org"
+commonName = "Openssl-Code-Client"
+

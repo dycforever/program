@@ -1,0 +1,35 @@
+[default]
+name = root-ca
+default_ca = ca_default
+
+[ca_default]
+home = ./root-ca
+database = $home/db/index
+serial = $home/db/serial
+crlnumber = $home/db/crlnumber
+certificate = $home/$name.crt
+private_key = $home/private/$name.key
+RANDFILE = $home/private/random
+new_certs_dir = $home/certs
+unique_subject = no
+copy_extensions = none
+default_days = 3650
+default_crl_days = 365
+default_md = sha256
+policy = policy_c_o_match
+
+[policy_c_o_match]
+countryName = match
+stateOrProvinceName = optional
+organizationName = match
+organizationalUnitName = optional
+commonName = supplied
+emailAddress = optional
+
+[ca_ext]
+#表示这是个CA，可以给别人签发证书
+basicConstraints = critical,CA:true
+keyUsage = critical,keyCertSign,cRLSign
+subjectKeyIdentifier = hash
+
+

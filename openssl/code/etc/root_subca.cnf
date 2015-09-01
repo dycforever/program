@@ -1,18 +1,11 @@
 [default]
 name = root-ca
-domain_suffix = example.com
+domain_suffix = root.com
 aia_url = http://$name.$domain_suffix/$name.crt
 crl_url = http://$name.$domain_suffix/$name.crl
 ocsp_url = http://ocsp.$name.$domain_suffix:9080
 default_ca = ca_default
-name_opt = utf8,esc_ctrl,multiline,lname,align
 
-[ca_dn]
-countryName = "GB"
-organizationName = "Example"
-commonName = "Root CA"
-
-# 2
 [ca_default]
 home = ./root-ca
 database = $home/db/index
@@ -37,41 +30,15 @@ organizationalUnitName = optional
 commonName = supplied
 emailAddress = optional
 
-# 3
-[req]
-default_bits = 4096
-encrypt_key = no
-default_md = sha256
-utf8 = yes
-string_mask = utf8only
-prompt = no
-distinguished_name = ca_dn
-req_extensions = ca_ext
-
-[ca_ext]
-#表示这是个CA，可以给别人签发证书
-basicConstraints = critical,CA:true
-keyUsage = critical,keyCertSign,cRLSign
-subjectKeyIdentifier = hash
-
-# 4
 [sub_ca_ext]
 authorityInfoAccess = @issuer_info
 authorityKeyIdentifier = keyid:always
-#basicConstraints = critical,CA:true,pathlen:0
-basicConstraints = critical,CA:false
+basicConstraints = critical,CA:true,pathlen:0
 crlDistributionPoints = @crl_info
 extendedKeyUsage = clientAuth,serverAuth
-#keyUsage = critical,keyCertSign,cRLSign
-keyUsage = critical,digitalSignature,keyEncipherment
+keyUsage = critical,keyCertSign,cRLSign
 nameConstraints = @name_constraints
 subjectKeyIdentifier = hash
-subjectAltName = @alt_names
-
-[alt_names]
-DNS.1 = *.xx.sm.cn
-DNS.2 = *.sm.cn
-
 
 [crl_info]
 URI.0 = $crl_url
@@ -81,8 +48,8 @@ caIssuers;URI.0 = $aia_url
 OCSP;URI.0 = $ocsp_url
 
 [name_constraints]
-#permitted;DNS.0=example.com
-#permitted;DNS.1=example.org
+permitted;DNS.0=example.com
+permitted;DNS.1=example.org
 excluded;IP.0=0.0.0.0/0.0.0.0
 excluded;IP.1=0:0:0:0:0:0:0:0/0:0:0:0:0:0:0:0
 
