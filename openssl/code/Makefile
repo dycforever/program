@@ -10,7 +10,7 @@ export CPPFLAGS=\
 
 export LDFLAGS=-L/home/dingyc/tools/openssl-1.0.1h/lib/ -lpthread -lssl -lcrypto -ldl
 export LIBRARY_PATH=/home/dingyc/tools/openssl-1.0.1h/lib/
-targets=bio_client ssl_client ssl_server https_client PKEY_cipher evp_cipher client_reply
+targets=bio_client ssl_client ssl_server https_client PKEY_cipher evp_cipher ngx
 
 all:$(targets)
 
@@ -32,8 +32,8 @@ evp_cipher:evp_cipher.cpp
 PKEY_cipher:PKEY_cipher.cpp
 	g++ -o $@ $(CPPFLAGS) -I $(CPLUS_INCLUDE_PATH) $^ -L$(LIBRARY_PATH) $(LDFLAGS)
 
-client_reply:client_reply.cpp
-	g++ -o $@ $(CPPFLAGS) -I $(CPLUS_INCLUDE_PATH) $^ -L$(LIBRARY_PATH) $(LDFLAGS)
+ngx:ngx.c
+	gcc -o $@ $(CPPFLAGS) -I $(CPLUS_INCLUDE_PATH) $^ -L$(LIBRARY_PATH) $(LDFLAGS)
 
 
 .PHONY: clean
