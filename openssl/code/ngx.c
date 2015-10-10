@@ -104,12 +104,6 @@ ngx_ssl_certificate(SSL_CTX *ctx, char* cert, char* key)
         return -1;
     }
 
-//    if (SSL_CTX_set_ex_data(ctx, ngx_ssl_certificate_index, x509) == 0)
-//    {
-//            printf("SSL_CTX_set_ex_data() failed");
-//        return -1;
-//    }
-
     X509_free(x509);
 
     /* read rest of the chain */
@@ -255,6 +249,12 @@ int main()
 
     if (ngx_ssl_certificate(ctx, certificate_path,
                             certificate_key_path) != 0)
+    {
+        return -1;
+    }
+
+    if (ngx_ssl_certificate(ctx, "certs/server/server_sha1.crt",
+                            "certs/server/private/server.key") != 0)
     {
         return -1;
     }

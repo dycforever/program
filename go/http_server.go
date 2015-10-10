@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func sayhelloName(w http.ResponseWriter, r *http.Request) {
+func saveFile(w http.ResponseWriter, r *http.Request) {
     err := r.ParseMultipartForm(1e8)
     if err != nil {
 		fmt.Fprintf(w, "error!\n")
@@ -68,7 +68,7 @@ func HelloServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/upload", sayhelloName)
+	http.HandleFunc("/upload", saveFile)
 	http.HandleFunc("/", HelloServer)
 	err := http.ListenAndServe(":9090", nil)
 	if err != nil {
