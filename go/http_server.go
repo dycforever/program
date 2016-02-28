@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path"
 	"io"
 	"log"
 	"net/http"
@@ -26,7 +27,10 @@ func recvMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func chart(w http.ResponseWriter, r *http.Request) {
-	fin, _ := os.Open("/home/dingyc/github.com/dycforever/program/js/highcharts/index.html")
+	url := r.URL.EscapedPath()
+	file := path.Join("/home/dyc/github/dycforever/program/js/highcharts", url)
+	fmt.Println("output file:", file)
+	fin, _ := os.Open(file)
 	defer fin.Close()
 	io.Copy(w, fin)
 }
@@ -93,8 +97,8 @@ func HelloServer(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/upload", saveFile)
 	http.HandleFunc("/report", recvMetric)
-	http.HandleFunc("/index", chart)
-	http.HandleFunc("/", HelloServer)
+	http.HandleFunc("/hello", HelloServer)
+	http.HandleFunc("/", chart)
 	err := http.ListenAndServe(":9090", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

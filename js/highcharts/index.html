@@ -3,104 +3,31 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>highcharts</title>
-<link href="css/lanrenzhijia.css" rel="stylesheet" type="text/css" />
-<!-- 1. Add these JavaScript inclusions in the head of your page -->
-<script type="text/javascript" src="http://www.lanrenzhijia.com/ajaxjs/1.3.2/jquery-1.3.2.min.js"></script>
-<script type="text/javascript" src="js/highcharts.js"></script>
-<!--[if IE]>
-<script type="text/javascript" src="js/excanvas.compiled.js"></script>
-<![endif]-->
-<!-- 2. Add the JavaScript to initialize the chart on document ready -->
+<link href="format.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="jquery-1.3.2.js"></script>
+<script type="text/javascript" src="highcharts.js"></script>
+
 <script type="text/javascript"> 
-		$(document).ready(function() {
+		function load() {
 			var chart = new Highcharts.Chart({
 				chart: {
 					renderTo: 'overview',
 					defaultSeriesType: 'spline'
 				},
 				title: {
-					text: 'Temperature'
-				},
-				subtitle: {
-					text: 'Over the last 8 months'
+					text: 'qps/latency'
 				},
 				xAxis: {
 					type: 'datetime'
 				},
 				yAxis: {
 					title: {
-						text: 'Temperature (°C)'
+						text: 'qps'
 					},
 					min: 10,
 					minorGridLineWidth: 0, 
 					gridLineWidth: 0,
 					alternateGridColor: null,
-					plotBands: [{ // Light air
-						from: 10,
-						to: 15,
-						color: 'rgba(0, 240, 255, .1)'
-					},  { // Fresh breeze
-						from: 15,
-						to: 19,
-						color: 'rgba(0, 102, 255, .1)'
-					}, { // High wind
-						from: 19,
-						to: 22,
-						color: 'rgba(255, 252, 0, .1)'
-					}, { // High wind
-						from: 22,
-						to: 25,
-						color: 'rgba(255, 156, 0, .1)'
-					}
-					, { // High wind
-						from: 22,
-						to: 35,
-						color: 'rgba(255, 0, 0, .1)'
-					}
-				]
-				},
-				labels: {
-					items: [{
-						// To do: 
-						// Make a common labels layer and combine it with credits and titles?
-						// Use the Layer object and add a method for drawing HTML.
-						// Make balloons and make usable for individual dataLabels
-						html: 'Very Cold',
-						style: {
-							left: '10px',
-							top: '275px'
-						}		
-					}, {
-						html: 'Chilly',
-						style: {
-							left: '10px',
-							top: '245px'
-						}		
-					}, {
-						html: 'Cold',
-						style: {
-							left: '10px',
-							top: '205px'
-						}		
-					}, {
-						html: 'Medium',
-						style: {
-							left: '10px',
-							top: '160px'
-						}		
-					}, {
-						html: 'Warm',
-						style: {
-							left: '10px',
-							top: '105px'
-						}		
-					}, {
-						html: 'Hot',
-						style: {
-							left: '10px',
-							top: '40px'
-						}		
-					}]
 				},
 				tooltip: {
 					formatter: function() {
@@ -136,19 +63,10 @@
 			
 				}]
 			});
-			
-	
-		
-			
-			
-		});
+		}
 		</script>
 </head>
-<body>
-<noscript>
-<div id="noscript">You need JavaScript enabled to view most of the demos!</div>
-</noscript>
-<div id="header"><a href="#"><img src="images/logo.png" width="348" height="63" border="0" /></a></div>
+<body onload="load()">
 <div id="container">
   <div id="overview" style="width: 980px; height: 450px"></div>
 </div>

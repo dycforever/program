@@ -171,10 +171,11 @@ func main() {
 
 	abs := "/home/dingyc/dev/containers/runc_cont_test"
 
+	// dyc: init factory's InitPath/InitArgs/Root/Validator/CriuPath/NewCgroupsManager
 	factory, err := libcontainer.New(abs, libcontainer.Cgroupfs, func(l *libcontainer.LinuxFactory) error {
 		return nil
 	})
-
+	// dyc: use spec and rspec to init configs.Config
 	config, err := createLibcontainerConfig("container_id", spec, rspec)
 	if err != nil {
 		fmt.Println(err)
