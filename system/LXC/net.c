@@ -31,7 +31,7 @@ int child_main(void* arg)
     sethostname("In Namespace", 12);
 
     // remount "/proc" to get accurate "top" && "ps" output
-    mount("proc", "/proc", "proc", 0, NULL);
+    // mount("proc", "/proc", "proc", 0, NULL);
 
     // wait for network setup in parent
     read(checkpoint[0], &c, 1);
@@ -62,7 +62,7 @@ int main()
     }
     // further init: create a veth pair
     char* cmd;
-    asprintf(&cmd, "ip link set veth1 netns %d", child_pid);
+    asprintf(&cmd, "echo '%d' > ./pidfile; ip link set veth1 netns %d", child_pid, child_pid);
     system("ip link add veth0 type veth peer name veth1");
     system(cmd);
     system("ip link set veth0 up");
