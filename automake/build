@@ -1,0 +1,36 @@
+# build in lib dir
+#
+cd lib;
+autoscan;
+mv configure.scan configure.ac;
+patch -p0 < ../patch/lib.patch;
+aclocal;
+autoconf;
+autoheader;
+libtoolize --automake --copy;
+automake --add-missing;
+./configure;
+make;
+sudo make install;
+cd -
+
+
+# build in src dir
+cd src
+autoscan;
+mv configure.scan configure.ac;
+patch -p0 < ../patch/hello.patch;
+aclocal;
+autoconf;
+autoheader;
+libtoolize --automake --copy;
+automake --add-missing;
+./configure;
+make;
+sudo make install;
+cd -
+
+# run
+./hello
+
+

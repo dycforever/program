@@ -1,0 +1,7 @@
+autoscan() ==> configure.scan
+aclocal(configure.ac) ==> aclocal.m4 #解析configure.ac里的AM_INIT_AUTOMAKE等宏定义。
+autoconf(configure.ac, alcocal.m4) ==> configure
+autoheader() ==> config.h.in  #适配不同的环境
+libtoolize  --automake --copy ==> ltmain.sh
+automake --add-missing (configure.h.in, configure.ac, ltmain.sh, Makefile.am) ==> makefile.in  #手工编写 Makefile.am
+./configure(ltmain.sh, config.h.in, makefile.in)  ==> Makefile, config.h（还有config.status)
