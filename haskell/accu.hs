@@ -14,4 +14,5 @@ parse (str, _) = str
 
 main = do
     print $ (parse.alnums) "a14 haha"
+    print $ parse(alnums "a14 haha")
 
