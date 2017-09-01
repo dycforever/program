@@ -42,7 +42,12 @@ std::unique_ptr<T> make_unique(U&&... u)
  * 所以，c++11之前，[non-const 左值] 匹配到 [非 const 引用]，[右值] 和 [const 左值] 匹配到 [const 引用]
  * 而现在，[non-const 左值] 匹配到 [非 const 引用]，[右值] 匹配到 [右值引用 &&], [const 左值] 匹配到 [const 引用]
  * std::move() 能把非 const 左值变成右值，但是不能把 const 左值变成右值
- *
+ * 
+ * 注意：
+ * 引用折叠规则只适用于模板，即：
+ * template <class T> void func(T&&) 这边的 T 虽然声明是右值却可以承接左值，特化后的模板 template <> void func(string&&) 也可以承接左值
+ * 但是非模板函数 void func(string&&) 是不能直接承接左值的！
+ * 
  * 程序输出:
  *
  * rvalue overload, n=2
