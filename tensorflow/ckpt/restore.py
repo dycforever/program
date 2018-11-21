@@ -15,8 +15,8 @@ x2 = graph.get_tensor_by_name("x2:0")
 
 feed_dict ={x1:4.0, x2:5.0}
 
-op_to_restore = graph.get_tensor_by_name("op_to_restore:0")
-print sess.run(op_to_restore, feed_dict)
+tensor_y = graph.get_tensor_by_name("tensor_y:0")
+print sess.run(tensor_y, feed_dict)
 
 
 nouse = graph.get_tensor_by_name("nouse:0")

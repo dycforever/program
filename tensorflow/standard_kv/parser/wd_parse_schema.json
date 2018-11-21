@@ -1,0 +1,60 @@
+{
+  "fixed_len_feature": {
+    "label": {
+      "column_name": "label",
+      "default_value": 0,
+      "max_len": 1
+    },
+
+    "source": {
+      "column_name": "source",
+      "default_value": "|missing",
+      "max_len": 1
+    },
+
+    "channelid": {
+      "column_name": "channelid",
+      "default_value": "|missing",
+      "max_len": 1
+    },
+
+    "ctr": {
+      "column_name": "ctr",
+      "default_value": 1002,
+      "max_len": 1
+    },
+
+    "time": {
+      "column_name": "time",
+      "default_value": 8,
+      "max_len": 1
+    }
+  },
+
+  "var_len_feature": {
+    "title": {
+      "column_name": "title",
+      "default_value": "|missing",
+      "max_len": 50 
+    },
+
+    "bititle": {
+      "column_name": "bititle",
+      "default_value": "|missing",
+      "max_len": 50 
+    },
+
+    "item_tag": {
+      "column_name": "item_tag",
+      "default_value": "|missing",
+      "max_len": 10
+    },
+
+    "item_category": {
+      "column_name": "item_category",
+      "default_value": "|missing",
+      "max_len": 5 
+    }
+    
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "recordFlag": "[dat]",
+  "column": [
+    {
+      "columnName": "label",
+      "type": "int64",
+      "separator": ""
+    },
+    {
+      "columnName": "source",
+      "type": "string",
+      "separator": ""
+    },
+    {
+      "columnName": "channelid",
+      "type": "string",
+      "separator": ""
+    },
+
+    {
+      "columnName": "ctr",
+      "type": "int64",
+      "separator": ""
+    },
+
+    {
+      "columnName": "time",
+      "type": "int64",
+      "separator": ""
+    },
+    
+    {
+      "columnName": "title",
+      "type": "string",
+      "separator": ","
+    },
+
+    {
+      "columnName": "bititle",
+      "type": "string",
+      "separator": ","
+    },
+
+    {
+      "columnName": "item_tag",
+      "type": "string",
+      "separator": ","
+    },
+
+    {
+      "columnName": "item_category",
+      "type": "string",
+      "separator": ","
+    }
+
+  ]
+
+}

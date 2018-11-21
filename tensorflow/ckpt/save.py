@@ -9,7 +9,7 @@ b = tf.Variable(3.0, name="bias")
 feed_dict ={x1:1, x2:2}
 
 # y = 1*2+3 = 5
-y = tf.add(tf.multiply(x1, x2), b, name="op_to_restore")
+y = tf.add(tf.multiply(x1, x2), b, name="tensor_y")
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
