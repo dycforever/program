@@ -7,9 +7,9 @@ with tf.Graph().as_default():
     b = tf.tile(a,[2,3])
     sess = tf.Session()
     print(sess.run(b))
-
     # 输出:
     # [[1 2 1 2 1 2]
     #  [3 4 3 4 3 4]
     #  [1 2 1 2 1 2]
     #  [3 4 3 4 3 4]]
+
