@@ -10,7 +10,7 @@ with tf.Graph().as_default():
     # """[1,0,0]表示第一维偏移了1
     # 然后第一维从 1 开始，size 为 1
     # 第一维从 0 开始，size 为 1"""
-    # 第二维从 0 开始，size 为 1"""
+    # 第二维从 0 开始，size 为 3"""
     data = tf.slice(input, [1, 0, 0], [1, 1, 3])
 
     print(sess.run(data))
